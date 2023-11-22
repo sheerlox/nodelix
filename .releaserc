@@ -38,7 +38,8 @@
     [
       "@semantic-release/exec",
       {
-        "publishCmd": "mix hex.publish --yes"
+        "publishCmd": "mix hex.publish --yes",
+        "failCommand": "mix hex.publish --revert ${nextRelease.version} --yes"
       }
     ]
   ]
