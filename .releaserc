@@ -34,6 +34,12 @@
         "message": "chore(release): v${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
       }
     ],
-    "@semantic-release/github"
+    "@semantic-release/github",
+    [
+      "@semantic-release/exec",
+      {
+        "publishCmd": "mix hex.publish --yes"
+      }
+    ]
   ]
 }

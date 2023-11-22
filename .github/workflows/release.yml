@@ -26,22 +26,6 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Use Node.js LTS
-        uses: actions/setup-node@8f152de45cc393bb48ce5d89d36b731f54556e65 # v4
-        with:
-          node-version-file: ".tool-versions"
-
-      - name: Install packages
-        run: npm ci
-
-      - name: Audit npm signatures
-        run: npm audit signatures
-
-      - name: Run Semantic Release
-        run: npx semantic-release
-        env:
-          GITHUB_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
-
       - name: Set up Elixir
         uses: erlef/setup-beam@61e01a43a562a89bfc54c7f9a378ff67b03e4a21 # v1.16.0
         with:
@@ -66,7 +50,19 @@ jobs:
           key: ${{ runner.os }}-${{ env.cache-name }}-${{ hashFiles('**/mix.lock') }}
           restore-keys: ${{ runner.os }}-${{ env.cache-name }}-
 
-      - name: Publish to Hex
-        run: mix hex.publish --yes
+      - name: Use Node.js LTS
+        uses: actions/setup-node@8f152de45cc393bb48ce5d89d36b731f54556e65 # v4
+        with:
+          node-version-file: ".tool-versions"
+
+      - name: Install packages
+        run: npm ci
+
+      - name: Audit npm signatures
+        run: npm audit signatures
+
+      - name: Run Semantic Release
+        run: npx semantic-release
         env:
+          GITHUB_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
           HEX_API_KEY: ${{ secrets.HEX_API_KEY }}
