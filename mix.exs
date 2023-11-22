@@ -40,6 +40,7 @@ defmodule Nodelix.MixProject do
   defp docs() do
     [
       name: "Nodelix",
+      main: "readme",
       source_url: @source_url,
       source_ref: "v#{@version}",
       canonical: "http://hexdocs.pm/nodelix",
