@@ -1,0 +1,9 @@
+{
+  "devDependencies": {
+    "@insurgent/conventional-changelog-preset": "^9.0.1",
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/git": "^10.0.1",
+    "semantic-release": "^22.0.8",
+    "semantic-release-hex": "^1.0.3"
+  }
+}
