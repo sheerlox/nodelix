@@ -1,7 +1,7 @@
 defmodule Nodelix.MixProject do
   use Mix.Project
 
-  @version "0.0.0-alpha"
+  @version "1.0.0-alpha.1"
   @source_url "https://github.com/sheerlox/nodelix"
 
   def project do
