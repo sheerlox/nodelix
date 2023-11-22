@@ -12,7 +12,8 @@ defmodule Nodelix.MixProject do
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       description: description(),
-      package: package()
+      package: package(),
+      docs: docs()
     ]
   end
 
@@ -36,7 +37,19 @@ defmodule Nodelix.MixProject do
     ]
   end
 
+  defp docs() do
+    [
+      name: "Nodelix",
+      source_url: @source_url,
+      source_ref: "v#{@version}",
+      canonical: "http://hexdocs.pm/nodelix",
+      extras: ["README.md", "CHANGELOG.md", "LICENSE"]
+    ]
+  end
+
   defp deps do
-    []
+    [
+      {:ex_doc, ">= 0.0.0", only: :dev, runtime: false}
+    ]
   end
 end
