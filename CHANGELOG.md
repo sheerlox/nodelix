@@ -1,3 +1,20 @@
+## [1.0.0-alpha.2](https://github.com/sheerlox/nodelix/compare/v1.0.0-alpha.1...v1.0.0-alpha.2) (2023-11-22)
+
+
+### 🛠 Builds
+
+* **hex:** add main field to docs configuration ([85324c1](https://github.com/sheerlox/nodelix/commit/85324c1d1b99c2a2a22a68d24221863b5b1515ad))
+
+
+### ⚙️ Continuous Integrations
+
+* add test & release workflows ([afa22e1](https://github.com/sheerlox/nodelix/commit/afa22e1695fabdcbd3e270604ddba09bd28aab28))
+
+
+### ♻️ Chores
+
+* **deps:** update dependency semantic-release-hex to v1.1.0 ([21ac76c](https://github.com/sheerlox/nodelix/commit/21ac76c299d185fa7ba45bdac5e51e49804be5f0))
+
 ## 1.0.0-alpha.1 (2023-11-22)
 
 

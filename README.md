@@ -10,7 +10,7 @@ by adding `nodelix` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:nodelix, "~> 0.0.0-alpha"}
+    {:nodelix, "~> 1.0.0-alpha.2"}
   ]
 end
 ```
