@@ -57,10 +57,10 @@ defmodule Nodelix.NodeManager do
   end
 
   @doc """
-  The default URL to install Tailwind from.
+  The default URL to fetch the Node.js archive from.
   """
   def default_base_url do
-    "https://github.com/tailwindlabs/tailwindcss/releases/download/v$version/tailwindcss-$target"
+    "https://nodejs.org/dist/v$version/node-v$version-$target"
   end
 
   @doc """
@@ -83,29 +83,34 @@ defmodule Nodelix.NodeManager do
   end
 
   # Available targets:
-  #  tailwindcss-freebsd-arm64
-  #  tailwindcss-freebsd-x64
-  #  tailwindcss-linux-arm64
-  #  tailwindcss-linux-x64
-  #  tailwindcss-linux-armv7
-  #  tailwindcss-macos-arm64
-  #  tailwindcss-macos-x64
-  #  tailwindcss-windows-x64.exe
+  # aix-ppc64.tar.gz
+  # darwin-arm64.tar.gz
+  # darwin-x64.tar.gz
+  # linux-arm64.tar.gz
+  # linux-armv7l.tar.gz
+  # linux-ppc64le.tar.gz
+  # linux-s390x.tar.gz
+  # linux-x64.tar.gz
+  # win-arm64.zip
+  # win-x64.zip
+  # win-x86.zip
   defp target do
     arch_str = :erlang.system_info(:system_architecture)
     [arch | _] = arch_str |> List.to_string() |> String.split("-")
 
     case {:os.type(), arch, :erlang.system_info(:wordsize) * 8} do
-      {{:win32, _}, _arch, 64} -> "windows-x64.exe"
-      {{:unix, :darwin}, arch, 64} when arch in ~w(arm aarch64) -> "macos-arm64"
-      {{:unix, :darwin}, "x86_64", 64} -> "macos-x64"
-      {{:unix, :freebsd}, "aarch64", 64} -> "freebsd-arm64"
-      {{:unix, :freebsd}, "amd64", 64} -> "freebsd-x64"
-      {{:unix, :linux}, "aarch64", 64} -> "linux-arm64"
-      {{:unix, :linux}, "arm", 32} -> "linux-armv7"
-      {{:unix, :linux}, "armv7" <> _, 32} -> "linux-armv7"
-      {{:unix, _osname}, arch, 64} when arch in ~w(x86_64 amd64) -> "linux-x64"
-      {_os, _arch, _wordsize} -> raise "tailwind is not available for architecture: #{arch_str}"
+      {{:unix, :aix}, "ppc64", 64} -> "aix-ppc64.tar.gz"
+      {{:unix, :darwin}, arch, 64} when arch in ~w(arm aarch64) -> "darwin-arm64.tar.gz"
+      {{:unix, :darwin}, "x86_64", 64} -> "darwin-x64.tar.gz"
+      {{:unix, :linux}, "aarch64", 64} -> "linux-arm64.tar.gz"
+      {{:unix, :linux}, "armv7l", 32} -> "linux-armv7l.tar.gz"
+      {{:unix, :linux}, "ppc64le", 64} -> "linux-ppc64le.tar.gz"
+      {{:unix, :linux}, "s390x", 32} -> "linux-s390x.tar.gz"
+      {{:unix, _osname}, arch, 64} when arch in ~w(x86_64 amd64) -> "linux-x64.tar.gz"
+      {{:win32, _}, "aarch64", 64} -> "win-arm64.zip"
+      {{:win32, _}, _arch, 64} -> "win-x64.zip"
+      {{:win32, _}, _arch, 32} -> "win-x86.zip"
+      {_os, _arch, _wordsize} -> raise "Node.js is not available for architecture: #{arch_str}"
     end
   end
 
