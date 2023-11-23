@@ -13,13 +13,8 @@ defmodule Nodelix.MixProject do
       deps: deps(),
       description: description(),
       package: package(),
-      docs: docs()
-    ]
-  end
-
-  def application do
-    [
-      extra_applications: [:logger]
+      docs: docs(),
+      aliases: [test: ["nodelix.install --if-missing", "test"]]
     ]
   end
 
@@ -48,8 +43,17 @@ defmodule Nodelix.MixProject do
     ]
   end
 
+  def application do
+    [
+      extra_applications: [:logger, inets: :optional, ssl: :optional],
+      mod: {Nodelix, []},
+      env: [default: []]
+    ]
+  end
+
   defp deps do
     [
+      {:castore, "~> 1.0"},
       {:ex_doc, ">= 0.0.0", only: :dev, runtime: false}
     ]
   end
