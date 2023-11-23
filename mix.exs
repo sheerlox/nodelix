@@ -8,7 +8,7 @@ defmodule Nodelix.MixProject do
     [
       app: :nodelix,
       version: @version,
-      elixir: "~> 1.15",
+      elixir: "~> 1.12.3 or ~> 1.13",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       description: description(),
