@@ -39,7 +39,7 @@ defmodule Nodelix.MixProject do
       source_url: @source_url,
       source_ref: "v#{@version}",
       canonical: "http://hexdocs.pm/nodelix",
-      extras: ["README.md", "CHANGELOG.md", "LICENSE"]
+      extras: ["README.md", "CHANGELOG.md", "LICENSE.md"]
     ]
   end
 
