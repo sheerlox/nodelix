@@ -1,4 +1,6 @@
 defmodule Mix.Tasks.Nodelix do
+  use Mix.Task
+
   @moduledoc """
   Invokes tailwind with the given args.
 
@@ -30,8 +32,6 @@ defmodule Mix.Tasks.Nodelix do
 
   @shortdoc "Invokes tailwind with the profile and args"
   @compile {:no_warn_undefined, Mix}
-
-  use Mix.Task
 
   @impl true
   def run(args) do

@@ -1,14 +1,18 @@
 defmodule Mix.Tasks.Nodelix.Install do
+  use Mix.Task
+
+  alias Nodelix.NodeManager
+
   @moduledoc """
   Installs Tailwind executable and assets.
 
       $ mix nodelix.install
       $ mix nodelix.install --if-missing
 
-  By default, it installs #{Nodelix.latest_version()} but you
+  By default, it installs #{NodeManager.latest_version()} but you
   can configure it in your config files, such as:
 
-      config :nodelix, :version, "#{Nodelix.latest_version()}"
+      config :nodelix, :version, "#{NodeManager.latest_version()}"
 
   ## Options
 
@@ -43,8 +47,6 @@ defmodule Mix.Tasks.Nodelix.Install do
   @shortdoc "Installs Tailwind executable and assets"
   @compile {:no_warn_undefined, Mix}
 
-  use Mix.Task
-
   @impl true
   def run(args) do
     valid_options = [runtime_config: :boolean, if_missing: :boolean, assets: :boolean]
@@ -52,7 +54,7 @@ defmodule Mix.Tasks.Nodelix.Install do
     {opts, base_url} =
       case OptionParser.parse_head!(args, strict: valid_options) do
         {opts, []} ->
-          {opts, Nodelix.default_base_url()}
+          {opts, NodeManager.default_base_url()}
 
         {opts, [base_url]} ->
           {opts, base_url}
@@ -114,13 +116,13 @@ defmodule Mix.Tasks.Nodelix.Install do
       end
 
       Mix.Task.run("loadpaths")
-      Nodelix.install(base_url)
+      NodeManager.install(base_url)
     end
   end
 
   defp latest_version?() do
     version = Nodelix.configured_version()
-    match?({:ok, ^version}, Nodelix.bin_version())
+    match?({:ok, ^version}, NodeManager.bin_version())
   end
 
   defp prepare_app_css do

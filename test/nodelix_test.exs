@@ -1,7 +1,7 @@
 defmodule NodelixTest do
   use ExUnit.Case, async: true
 
-  @version Nodelix.latest_version()
+  @version Nodelix.NodeManager.latest_version()
 
   setup do
     Application.put_env(:nodelix, :version, @version)
