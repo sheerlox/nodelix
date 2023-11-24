@@ -2,6 +2,8 @@
 
 Seamless Node.js in Elixir.
 
+**⚠️ Warning: this module is currently under development, do not use.**
+
 ## Installation
 
 If [available in Hex](https://hex.pm/docs/publish), the package can be installed
