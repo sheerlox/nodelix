@@ -2,6 +2,10 @@ defmodule Nodelix.NodeDownloader do
   # https://nodejs.org/en/about/previous-releases
   @latest_lts_version "20.10.0"
 
+  @default_archive_url "https://nodejs.org/dist/v$version/node-v$version-$target"
+  @checksums_url "https://nodejs.org/dist/v$version/SHASUMS256.txt"
+  @checksums_signature_url "https://nodejs.org/dist/v$version/SHASUMS256.txt.sig"
+
   require Logger
 
   alias Nodelix.HttpUtils
@@ -11,15 +15,15 @@ defmodule Nodelix.NodeDownloader do
   @doc """
   TODO
   - [X] fetch Node.js archive for a version and platform (https://nodejs.org/dist/v20.10.0/)
-  - [ ] fetch checksum file (https://nodejs.org/dist/v20.10.0/SHASUMS256.txt)
-  - [ ] fetch checksum file signature (https://nodejs.org/dist/v20.10.0/SHASUMS256.txt.sig)
+  - [X] fetch checksums file (https://nodejs.org/dist/v20.10.0/SHASUMS256.txt)
+  - [X] fetch checksums file signature (https://nodejs.org/dist/v20.10.0/SHASUMS256.txt.sig)
   - [ ] fetch Node.js signing keys list (https://raw.githubusercontent.com/nodejs/release-keys/main/keys.list)
   - [ ] fetch keys (https://raw.githubusercontent.com/nodejs/release-keys/main/keys/4ED778F539E3634C779C87C6D7062848A1AB005C.asc)
   - [ ] convert keys to PEM (https://stackoverflow.com/questions/10966256/erlang-importing-gpg-public-key)
-  - [ ] check signature of the checksum file with each key until there's a match
+  - [ ] check signature of the checksums file with each key until there's a match
   - [ ] match the hash for the archive filename
   - [ ] check integrity of the downloaded archive
-  - [ ] return the archive
+  - [ ] decompress archive (delete destination first, see https://github.com/phoenixframework/tailwind/pull/67)
   """
   def todo, do: []
 
@@ -29,11 +33,16 @@ defmodule Nodelix.NodeDownloader do
   def latest_lts_version, do: @latest_lts_version
 
   @doc """
-  Returns the path to the executable.
+  The default URL to fetch the Node.js archive from.
+  """
+  def default_archive_url, do: @default_archive_url
+
+  @doc """
+  Returns the path to the node executable.
 
   The executable may not be available if it was not yet installed.
   """
-  def bin_path, do: archive_path()
+  def bin_path, do: Map.get(paths(), :node)
 
   @doc """
   Returns the version of the tailwind executable.
@@ -53,45 +62,56 @@ defmodule Nodelix.NodeDownloader do
     end
   end
 
-  defp archive_path do
-    name = "nodejs-#{target()}"
-
-    if Code.ensure_loaded?(Mix.Project) do
-      Path.join(Path.dirname(Mix.Project.build_path()), name)
-    else
-      Path.expand("_build/#{name}")
-    end
-  end
-
   @doc """
   Installs Node.js with `configured_version/0`.
   """
-  def install(archive_url \\ default_archive_url()) do
+  def install(archive_url \\ @default_archive_url) do
     fetch_archive(archive_url)
+    fetch_checksums_and_signature()
   end
 
   defp fetch_archive(archive_url) do
     url = get_url(archive_url)
-    archive_path = archive_path()
+    %{archive: archive_path} = paths()
+
     Logger.debug("Downloading Node.js from #{url}")
     binary = HttpUtils.fetch_body!(url)
-    File.mkdir_p!(Path.dirname(archive_path))
-
-    # MacOS doesn't recompute code signing information if a binary
-    # is overwritten with a new version, so we force creation of a new file
-    if File.exists?(archive_path) do
-      File.rm!(archive_path)
-    end
-
     File.write!(archive_path, binary, [:binary])
   end
 
-  @spec default_archive_url() :: String.t()
-  @doc """
-  The default URL to fetch the Node.js archive from.
-  """
-  def default_archive_url do
-    "https://nodejs.org/dist/v$version/node-v$version-$target"
+  defp fetch_checksums_and_signature() do
+    checksums_url = get_url(@checksums_url)
+    checksums_signature_url = get_url(@checksums_signature_url)
+
+    %{checksums: checksums_path, signature: signature_path} = paths()
+
+    Logger.debug("Downloading checksums from #{checksums_url}")
+    binary = HttpUtils.fetch_body!(checksums_url)
+    File.write!(checksums_path, binary, [:binary])
+
+    Logger.debug("Downloading signature from #{checksums_signature_url}")
+    binary = HttpUtils.fetch_body!(checksums_signature_url)
+    File.write!(signature_path, binary, [:binary])
+  end
+
+  defp paths do
+    name = "node-#{Nodelix.configured_version()}"
+
+    base_path =
+      if Code.ensure_loaded?(Mix.Project) do
+        Path.dirname(Mix.Project.build_path())
+      else
+        Path.expand("_build")
+      end
+
+    File.mkdir_p!(base_path)
+
+    %{
+      :archive => Path.join(base_path, "#{name}-#{target()}"),
+      :checksums => Path.join(base_path, "SHASUMS256-#{name}.txt"),
+      :signature => Path.join(base_path, "SHASUMS256-#{name}.txt.sig"),
+      :node => Path.join(base_path, "#{name}/bin/node")
+    }
   end
 
   # Available targets:
