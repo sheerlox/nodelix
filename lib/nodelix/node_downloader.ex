@@ -6,6 +6,9 @@ defmodule Nodelix.NodeDownloader do
   @checksums_base_url "https://nodejs.org/dist/v$version/SHASUMS256.txt"
   @checksums_signature_base_url "https://nodejs.org/dist/v$version/SHASUMS256.txt.sig"
 
+  @signing_keys_list_url "https://raw.githubusercontent.com/nodejs/release-keys/main/keys.list"
+  @signing_keys_dir_url "https://raw.githubusercontent.com/nodejs/release-keys/main/keys"
+
   require Logger
 
   alias Nodelix.HttpUtils
@@ -17,8 +20,8 @@ defmodule Nodelix.NodeDownloader do
   - [X] fetch Node.js archive for a version and platform (https://nodejs.org/dist/v20.10.0/)
   - [X] fetch checksums file (https://nodejs.org/dist/v20.10.0/SHASUMS256.txt)
   - [X] fetch checksums file signature (https://nodejs.org/dist/v20.10.0/SHASUMS256.txt.sig)
-  - [ ] fetch Node.js signing keys list (https://raw.githubusercontent.com/nodejs/release-keys/main/keys.list)
-  - [ ] fetch keys (https://raw.githubusercontent.com/nodejs/release-keys/main/keys/4ED778F539E3634C779C87C6D7062848A1AB005C.asc)
+  - [X] fetch Node.js signing keys list (https://raw.githubusercontent.com/nodejs/release-keys/main/keys.list)
+  - [X] fetch keys (https://raw.githubusercontent.com/nodejs/release-keys/main/keys/4ED778F539E3634C779C87C6D7062848A1AB005C.asc)
   - [ ] convert keys to PEM (https://stackoverflow.com/questions/10966256/erlang-importing-gpg-public-key)
   - [ ] check signature of the checksums file with each key until there's a match
   - [ ] match the hash for the archive filename
@@ -68,6 +71,21 @@ defmodule Nodelix.NodeDownloader do
   def install(archive_base_url \\ @default_archive_base_url) do
     fetch_archive(archive_base_url)
     fetch_checksums_and_signature()
+    _signing_keys = fetch_signing_keys()
+  end
+
+  defp fetch_signing_keys() do
+    Logger.debug("Downloading signing keys from #{@signing_keys_list_url}")
+
+    signing_key_ids =
+      @signing_keys_list_url
+      |> HttpUtils.fetch_body!()
+      |> String.trim()
+      |> String.split("\n")
+
+    Enum.map(signing_key_ids, fn key_id ->
+      HttpUtils.fetch_body!("#{@signing_keys_dir_url}/#{key_id}.asc")
+    end)
   end
 
   defp fetch_archive(archive_base_url) do
