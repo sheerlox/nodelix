@@ -2,66 +2,34 @@ defmodule Nodelix do
   use Application
   require Logger
 
-  alias Nodelix.NodeManager
+  alias Nodelix.NodeDownloader
 
   @moduledoc """
-  Nodelix is an installer and runner for [tailwind](https://tailwindcss.com/).
+  Nodelix is an installer and runner for [Node.js](https://nodejs.org/).
 
   ## Profiles
 
-  You can define multiple tailwind profiles. By default, there is a
+  You can define multiple nodelix profiles. By default, there is a
   profile called `:default` which you can configure its args, current
   directory and environment:
 
       config :nodelix,
-        version: "#{NodeManager.latest_version()}",
+        version: "#{NodeDownloader.latest_lts_version()}",
         default: [
           args: ~w(
-            --config=tailwind.config.js
-            --input=css/app.css
-            --output=../priv/static/assets/app.css
+            --version
           ),
           cd: Path.expand("../assets", __DIR__),
         ]
 
   ## Nodelix configuration
 
-  There are two global configurations for the tailwind application:
+  There are two global configurations for the nodelix application:
 
-    * `:version` - the expected tailwind version
+    * `:version` - the expected Node.js version
 
     * `:cacerts_path` - the directory to find certificates for
       https connections
-
-    * `:path` - the path to find the tailwind executable at. By
-      default, it is automatically downloaded and placed inside
-      the `_build` directory of your current app
-
-  Overriding the `:path` is not recommended, as we will automatically
-  download and manage `tailwind` for you. But in case you can't download
-  it (for example, GitHub behind a proxy), you may want to
-  set the `:path` to a configurable system location.
-
-  For instance, you can install `tailwind` globally with `npm`:
-
-      $ npm install -g tailwindcss
-
-  On Unix, the executable will be at:
-
-      NPM_ROOT/tailwind/node_modules/tailwind-TARGET/bin/tailwind
-
-  On Windows, it will be at:
-
-      NPM_ROOT/tailwind/node_modules/tailwind-windows-(32|64)/tailwind.exe
-
-  Where `NPM_ROOT` is the result of `npm root -g` and `TARGET` is your system
-  target architecture.
-
-  Once you find the location of the executable, you can store it in a
-  `MIX_TAILWIND_PATH` environment variable, which you can then read in
-  your configuration file:
-
-      config :nodelix, path: System.get_env("MIX_TAILWIND_PATH")
 
   """
 
@@ -69,21 +37,21 @@ defmodule Nodelix do
   def start(_, _) do
     unless Application.get_env(:nodelix, :version) do
       Logger.warn("""
-      tailwind version is not configured. Please set it in your config files:
+      Node.js version is not configured. Please set it in your config files:
 
-          config :nodelix, :version, "#{NodeManager.latest_version()}"
+          config :nodelix, :version, "#{NodeDownloader.latest_lts_version()}"
       """)
     end
 
     configured_version = configured_version()
 
-    case NodeManager.bin_version() do
+    case NodeDownloader.bin_version() do
       {:ok, ^configured_version} ->
         :ok
 
       {:ok, version} ->
         Logger.warn("""
-        Outdated tailwind version. Expected #{configured_version}, got #{version}. \
+        Outdated Node.js version. Expected #{configured_version}, got #{version}. \
         Please run `mix nodelix.install` or update the version in your config files.\
         """)
 
@@ -95,10 +63,10 @@ defmodule Nodelix do
   end
 
   @doc """
-  Returns the configured tailwind version.
+  Returns the configured Node.js version.
   """
   def configured_version do
-    Application.get_env(:nodelix, :version, NodeManager.latest_version())
+    Application.get_env(:nodelix, :version, NodeDownloader.latest_lts_version())
   end
 
   @doc """
@@ -109,15 +77,13 @@ defmodule Nodelix do
   def config_for!(profile) when is_atom(profile) do
     Application.get_env(:nodelix, profile) ||
       raise ArgumentError, """
-      unknown tailwind profile. Make sure the profile is defined in your config/config.exs file, such as:
+      unknown nodelix profile. Make sure the profile is defined in your config/config.exs file, such as:
 
           config :nodelix,
-            version: "#{NodeManager.latest_version()}",
+            version: "#{NodeDownloader.latest_lts_version()}",
             #{profile}: [
               args: ~w(
-                --config=tailwind.config.js
-                --input=css/app.css
-                --output=../priv/static/assets/app.css
+                --version
               ),
               cd: Path.expand("../assets", __DIR__)
             ]
@@ -147,7 +113,7 @@ defmodule Nodelix do
       stderr_to_stdout: true
     ]
 
-    NodeManager.bin_path()
+    NodeDownloader.bin_path()
     |> System.cmd(args ++ extra_args, opts)
     |> elem(1)
   end
@@ -157,13 +123,13 @@ defmodule Nodelix do
   end
 
   @doc """
-  Installs, if not available, and then runs `tailwind`.
+  Installs, if not available, and then runs `node`.
 
   Returns the same as `run/2`.
   """
   def install_and_run(profile, args) do
-    unless File.exists?(NodeManager.bin_path()) do
-      NodeManager.install()
+    unless File.exists?(NodeDownloader.bin_path()) do
+      NodeDownloader.install()
     end
 
     run(profile, args)

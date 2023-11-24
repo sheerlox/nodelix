@@ -2,21 +2,18 @@ defmodule Mix.Tasks.Nodelix do
   use Mix.Task
 
   @moduledoc """
-  Invokes tailwind with the given args.
+  Invokes `node` with the given args.
 
   Usage:
 
-      $ mix nodelix TASK_OPTIONS PROFILE TAILWIND_ARGS
+      $ mix nodelix TASK_OPTIONS PROFILE NODE_ARGS
 
   Example:
 
-      $ mix nodelix default --config=tailwind.config.js \
-        --input=css/app.css \
-        --output=../priv/static/assets/app.css \
-        --minify
+      $ mix nodelix default --tls-min-v1.3
 
-  If tailwind is not installed, it is automatically downloaded.
-  Note the arguments given to this task will be appended
+  If Node.js is not installed, it is automatically downloaded.
+  The arguments given to this task will be appended
   to any configured arguments.
 
   ## Options
@@ -24,13 +21,13 @@ defmodule Mix.Tasks.Nodelix do
     * `--runtime-config` - load the runtime configuration
       before executing command
 
-  Note flags to control this Mix task must be given before the
+  Flags to control this Mix task must be given before the
   profile:
 
       $ mix nodelix --runtime-config default
   """
 
-  @shortdoc "Invokes tailwind with the profile and args"
+  @shortdoc "Invokes node with the profile and args"
   @compile {:no_warn_undefined, Mix}
 
   @impl true

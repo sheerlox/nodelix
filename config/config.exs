@@ -1,7 +1,7 @@
 import Config
 
 config :nodelix,
-  version: "3.2.7",
+  version: "20.10.0",
   another: [
     args: ["--help"]
   ]

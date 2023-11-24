@@ -1,42 +1,34 @@
-defmodule Nodelix.NodeManager do
-  # https://github.com/tailwindlabs/tailwindcss/releases
-  @latest_version "3.2.7"
+defmodule Nodelix.NodeDownloader do
+  # https://nodejs.org/en/about/previous-releases
+  @latest_lts_version "20.10.0"
 
   require Logger
 
   @moduledoc """
   TODO
-  - fetch Node.js archive for a version and platform (https://nodejs.org/dist/v20.10.0/)
-  - fetch checksum file (https://nodejs.org/dist/v20.10.0/SHASUMS256.txt)
-  - fetch checksum file signature (https://nodejs.org/dist/v20.10.0/SHASUMS256.txt.sig)
-  - fetch Node.js signing keys list (https://raw.githubusercontent.com/nodejs/release-keys/main/keys.list)
-  - fetch keys (https://raw.githubusercontent.com/nodejs/release-keys/main/keys/4ED778F539E3634C779C87C6D7062848A1AB005C.asc)
-  - convert keys to PEM (https://stackoverflow.com/questions/10966256/erlang-importing-gpg-public-key)
-  - check signature of the checksum file with each key until there's a match
-  - match the hash for the archive filename
-  - check integrity of the downloaded archive
-  - return the archive
+  - [X] fetch Node.js archive for a version and platform (https://nodejs.org/dist/v20.10.0/)
+  - [ ] fetch checksum file (https://nodejs.org/dist/v20.10.0/SHASUMS256.txt)
+  - [ ] fetch checksum file signature (https://nodejs.org/dist/v20.10.0/SHASUMS256.txt.sig)
+  - [ ] fetch Node.js signing keys list (https://raw.githubusercontent.com/nodejs/release-keys/main/keys.list)
+  - [ ] fetch keys (https://raw.githubusercontent.com/nodejs/release-keys/main/keys/4ED778F539E3634C779C87C6D7062848A1AB005C.asc)
+  - [ ] convert keys to PEM (https://stackoverflow.com/questions/10966256/erlang-importing-gpg-public-key)
+  - [ ] check signature of the checksum file with each key until there's a match
+  - [ ] match the hash for the archive filename
+  - [ ] check integrity of the downloaded archive
+  - [ ] return the archive
   """
 
-  @doc false
-  # Latest known version at the time of publishing.
-  def latest_version, do: @latest_version
+  @doc """
+  Returns the latest known LTS version at the time of publishing.
+  """
+  def latest_lts_version, do: @latest_lts_version
 
   @doc """
   Returns the path to the executable.
 
   The executable may not be available if it was not yet installed.
   """
-  def bin_path do
-    name = "tailwind-#{target()}"
-
-    Application.get_env(:nodelix, :path) ||
-      if Code.ensure_loaded?(Mix.Project) do
-        Path.join(Path.dirname(Mix.Project.build_path()), name)
-      else
-        Path.expand("_build/#{name}")
-      end
-  end
+  def bin_path, do: archive_path()
 
   @doc """
   Returns the version of the tailwind executable.
@@ -57,6 +49,21 @@ defmodule Nodelix.NodeManager do
   end
 
   @doc """
+  Returns the path to the archive.
+
+  The archive may not be available if it was not yet installed.
+  """
+  def archive_path do
+    name = "nodejs-#{target()}"
+
+    if Code.ensure_loaded?(Mix.Project) do
+      Path.join(Path.dirname(Mix.Project.build_path()), name)
+    else
+      Path.expand("_build/#{name}")
+    end
+  end
+
+  @doc """
   The default URL to fetch the Node.js archive from.
   """
   def default_base_url do
@@ -64,22 +71,21 @@ defmodule Nodelix.NodeManager do
   end
 
   @doc """
-  Installs tailwind with `configured_version/0`.
+  Installs Node.js with `configured_version/0`.
   """
   def install(base_url \\ default_base_url()) do
     url = get_url(base_url)
-    bin_path = bin_path()
+    archive_path = archive_path()
     binary = fetch_body!(url)
-    File.mkdir_p!(Path.dirname(bin_path))
+    File.mkdir_p!(Path.dirname(archive_path))
 
     # MacOS doesn't recompute code signing information if a binary
     # is overwritten with a new version, so we force creation of a new file
-    if File.exists?(bin_path) do
-      File.rm!(bin_path)
+    if File.exists?(archive_path) do
+      File.rm!(archive_path)
     end
 
-    File.write!(bin_path, binary, [:binary])
-    File.chmod(bin_path, 0o755)
+    File.write!(archive_path, binary, [:binary])
   end
 
   # Available targets:
@@ -117,7 +123,7 @@ defmodule Nodelix.NodeManager do
   defp fetch_body!(url) do
     scheme = URI.parse(url).scheme
     url = String.to_charlist(url)
-    Logger.debug("Downloading tailwind from #{url}")
+    Logger.debug("Downloading Node.js from #{url}")
 
     {:ok, _} = Application.ensure_all_started(:inets)
     {:ok, _} = Application.ensure_all_started(:ssl)
@@ -163,10 +169,7 @@ defmodule Nodelix.NodeManager do
              your certificates are set via the cacerts_path configuration
 
           2. Manually download the executable from the URL above and
-             place it inside "_build/tailwind-#{target()}"
-
-          3. Install and use Tailwind from npmJS. See our module documentation
-             to learn more: https://hexdocs.pm/tailwind
+             place it inside "_build/node-#{target()}"
         """
     end
   end
