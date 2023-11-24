@@ -30,13 +30,13 @@ defmodule Mix.Tasks.Nodelix.Install do
   def run(args) do
     valid_options = [runtime_config: :boolean, if_missing: :boolean, assets: :boolean]
 
-    {opts, base_url} =
+    {opts, archive_url} =
       case OptionParser.parse_head!(args, strict: valid_options) do
         {opts, []} ->
-          {opts, NodeDownloader.default_base_url()}
+          {opts, NodeDownloader.default_archive_url()}
 
-        {opts, [base_url]} ->
-          {opts, base_url}
+        {opts, [archive_url]} ->
+          {opts, archive_url}
 
         {_, _} ->
           Mix.raise("""
@@ -60,7 +60,7 @@ defmodule Mix.Tasks.Nodelix.Install do
       end
 
       Mix.Task.run("loadpaths")
-      NodeDownloader.install(base_url)
+      NodeDownloader.install(archive_url)
     end
   end
 
