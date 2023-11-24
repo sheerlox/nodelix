@@ -4,7 +4,9 @@ defmodule Nodelix.NodeDownloader do
 
   require Logger
 
-  @moduledoc """
+  @moduledoc false
+
+  @doc """
   TODO
   - [X] fetch Node.js archive for a version and platform (https://nodejs.org/dist/v20.10.0/)
   - [ ] fetch checksum file (https://nodejs.org/dist/v20.10.0/SHASUMS256.txt)
@@ -17,6 +19,7 @@ defmodule Nodelix.NodeDownloader do
   - [ ] check integrity of the downloaded archive
   - [ ] return the archive
   """
+  def todo, do: []
 
   @doc """
   Returns the latest known LTS version at the time of publishing.

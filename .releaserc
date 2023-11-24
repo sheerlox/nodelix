@@ -21,7 +21,12 @@
         "config": "@insurgent/conventional-changelog-preset"
       }
     ],
-    "@semantic-release/changelog",
+    [
+      "@semantic-release/changelog",
+      {
+        "changelogTitle": "Changelog"
+      }
+    ],
     "semantic-release-hex",
     [
       "@semantic-release/git",

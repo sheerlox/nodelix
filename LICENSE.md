@@ -1,4 +1,6 @@
-# License and Copyright of `nodelix` (MIT)
+# Licenses
+
+## `nodelix` (Apache-2.0)
 
 Copyright (c) 2023 Pierre Cavin
 
@@ -14,7 +16,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 
-# License and Copyright of `tailwind` (MIT)
+## `tailwind` (MIT)
 
 Copyright (c) 2021 Wojtek Mach, José Valim.
 
