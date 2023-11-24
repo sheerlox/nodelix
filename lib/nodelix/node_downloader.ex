@@ -2,9 +2,9 @@ defmodule Nodelix.NodeDownloader do
   # https://nodejs.org/en/about/previous-releases
   @latest_lts_version "20.10.0"
 
-  @default_archive_url "https://nodejs.org/dist/v$version/node-v$version-$target"
-  @checksums_url "https://nodejs.org/dist/v$version/SHASUMS256.txt"
-  @checksums_signature_url "https://nodejs.org/dist/v$version/SHASUMS256.txt.sig"
+  @default_archive_base_url "https://nodejs.org/dist/v$version/node-v$version-$target"
+  @checksums_base_url "https://nodejs.org/dist/v$version/SHASUMS256.txt"
+  @checksums_signature_base_url "https://nodejs.org/dist/v$version/SHASUMS256.txt.sig"
 
   require Logger
 
@@ -35,7 +35,7 @@ defmodule Nodelix.NodeDownloader do
   @doc """
   The default URL to fetch the Node.js archive from.
   """
-  def default_archive_url, do: @default_archive_url
+  def default_archive_base_url, do: @default_archive_base_url
 
   @doc """
   Returns the path to the node executable.
@@ -65,23 +65,23 @@ defmodule Nodelix.NodeDownloader do
   @doc """
   Installs Node.js with `configured_version/0`.
   """
-  def install(archive_url \\ @default_archive_url) do
-    fetch_archive(archive_url)
+  def install(archive_base_url \\ @default_archive_base_url) do
+    fetch_archive(archive_base_url)
     fetch_checksums_and_signature()
   end
 
-  defp fetch_archive(archive_url) do
-    url = get_url(archive_url)
+  defp fetch_archive(archive_base_url) do
+    archive_url = get_url(archive_base_url)
     %{archive: archive_path} = paths()
 
-    Logger.debug("Downloading Node.js from #{url}")
-    binary = HttpUtils.fetch_body!(url)
+    Logger.debug("Downloading Node.js from #{archive_url}")
+    binary = HttpUtils.fetch_body!(archive_url)
     File.write!(archive_path, binary, [:binary])
   end
 
   defp fetch_checksums_and_signature() do
-    checksums_url = get_url(@checksums_url)
-    checksums_signature_url = get_url(@checksums_signature_url)
+    checksums_url = get_url(@checksums_base_url)
+    checksums_signature_url = get_url(@checksums_signature_base_url)
 
     %{checksums: checksums_path, signature: signature_path} = paths()
 
