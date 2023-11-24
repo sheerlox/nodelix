@@ -12,7 +12,7 @@ by adding `nodelix` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:nodelix, "~> 1.0.0-alpha.2"}
+    {:nodelix, "~> 1.0.0-alpha.3"}
   ]
 end
 ```

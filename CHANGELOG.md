@@ -1,3 +1,16 @@
+## [1.0.0-alpha.3](https://github.com/sheerlox/nodelix/compare/v1.0.0-alpha.2...v1.0.0-alpha.3) (2023-11-24)
+
+
+### 📚 Documentation
+
+* **readme:** add do not use warning ([1db5348](https://github.com/sheerlox/nodelix/commit/1db53484ccab2d5192b382a6be8d61b629405aa4))
+
+
+### ⚙️ Continuous Integrations
+
+* handle hex publishing in semantic-release ([aeeba12](https://github.com/sheerlox/nodelix/commit/aeeba12e4bb16ff8b555188572214ed3f6e03575))
+* unpublish next version if release fails ([9ca1f44](https://github.com/sheerlox/nodelix/commit/9ca1f44a10afc2ea16cfbe80af80ca08afeffe39))
+
 ## [1.0.0-alpha.2](https://github.com/sheerlox/nodelix/compare/v1.0.0-alpha.1...v1.0.0-alpha.2) (2023-11-22)
 
 
