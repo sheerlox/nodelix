@@ -53,6 +53,7 @@ defmodule Nodelix.MixProject do
 
   defp deps do
     [
+      {:gpg_ex, "1.0.0-alpha.3"},
       {:castore, "~> 1.0"},
       {:ex_doc, ">= 0.0.0", only: :dev, runtime: false}
     ]

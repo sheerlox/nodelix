@@ -7,7 +7,7 @@ defmodule Nodelix.NodeDownloader do
   @checksums_signature_base_url "https://nodejs.org/dist/v$version/SHASUMS256.txt.sig"
 
   @signing_keys_list_url "https://raw.githubusercontent.com/nodejs/release-keys/main/keys.list"
-  @signing_keys_dir_url "https://raw.githubusercontent.com/nodejs/release-keys/main/keys"
+  @signing_key_base_url "https://raw.githubusercontent.com/nodejs/release-keys/main/keys/$key_id.asc"
 
   require Logger
 
@@ -22,9 +22,7 @@ defmodule Nodelix.NodeDownloader do
   - [X] fetch checksums file signature (https://nodejs.org/dist/v20.10.0/SHASUMS256.txt.sig)
   - [X] fetch Node.js signing keys list (https://raw.githubusercontent.com/nodejs/release-keys/main/keys.list)
   - [X] fetch keys (https://raw.githubusercontent.com/nodejs/release-keys/main/keys/4ED778F539E3634C779C87C6D7062848A1AB005C.asc)
-  - [ ] convert keys to PEM (https://stackoverflow.com/questions/10966256/erlang-importing-gpg-public-key)
-  - [ ] check signature of the checksums file with each key until there's a match
-  - [ ] match the hash for the archive filename
+  - [X] verify signature of the checksums file
   - [ ] check integrity of the downloaded archive
   - [ ] decompress archive (delete destination first, see https://github.com/phoenixframework/tailwind/pull/67)
   """
@@ -71,11 +69,15 @@ defmodule Nodelix.NodeDownloader do
   def install(archive_base_url \\ @default_archive_base_url) do
     fetch_archive(archive_base_url)
     fetch_checksums_and_signature()
-    _signing_keys = fetch_signing_keys()
+    %{checksums: checksums_path, signature: signature_path} = paths()
+
+    verify_signature!(checksums_path, signature_path)
+
+    Logger.debug("Signature ok!")
   end
 
-  defp fetch_signing_keys() do
-    Logger.debug("Downloading signing keys from #{@signing_keys_list_url}")
+  defp verify_signature!(file_path, signature_path) do
+    Logger.debug("Downloading signing keys list from #{@signing_keys_list_url}")
 
     signing_key_ids =
       @signing_keys_list_url
@@ -83,9 +85,30 @@ defmodule Nodelix.NodeDownloader do
       |> String.trim()
       |> String.split("\n")
 
-    Enum.map(signing_key_ids, fn key_id ->
-      HttpUtils.fetch_body!("#{@signing_keys_dir_url}/#{key_id}.asc")
+    Logger.debug("Using GPG to retrieve signing keys")
+
+    %{path: keystore_path} = keystore = GPGex.Keystore.get_keystore_temp()
+
+    signing_key_ids
+    |> Enum.map(fn key_id ->
+      GPGex.cmd!(["--recv-keys", key_id], keystore: keystore)
     end)
+
+    case GPGex.cmd(
+           [
+             "--verify",
+             signature_path,
+             file_path
+           ],
+           keystore: keystore
+         ) do
+      {:ok, _, _} ->
+        File.rm_rf!(keystore_path)
+        :ok
+
+      {:error, _, _, _} ->
+        raise "invalid signature"
+    end
   end
 
   defp fetch_archive(archive_base_url) do
