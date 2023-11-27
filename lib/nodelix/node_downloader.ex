@@ -75,7 +75,7 @@ defmodule Nodelix.NodeDownloader do
   # - extracts the corresponding archive checksum
   # - verifies archive checksum matches
   defp verify_archive!() do
-    %{archive: archive_path, checksums: checksums_path} = paths()
+    %{archive: archive_path, checksums: checksums_path, keystore: keystore_path} = paths()
 
     Logger.debug("Downloading signing keys list from #{@signing_keys_list_url}")
 
@@ -85,28 +85,53 @@ defmodule Nodelix.NodeDownloader do
       |> String.trim()
       |> String.split("\n")
 
-    Logger.debug("Using GPG to retrieve #{length(signing_key_ids)} signing keys")
+    keystore = GPGex.Keystore.get_keystore(path: keystore_path)
 
-    %{path: keystore_path} = keystore = GPGex.Keystore.get_keystore_temp()
+    missing_keys =
+      signing_key_ids
+      |> Enum.filter(fn key_id ->
+        with {:error, _, _, _} <- GPGex.cmd(["--list-keys", key_id], keystore: keystore) do
+          true
+        else
+          _ -> false
+        end
+      end)
 
-    signing_key_ids
-    |> Enum.map(fn key_id ->
-      GPGex.cmd!(["--recv-keys", key_id], keystore: keystore)
-    end)
+    if length(missing_keys) > 0 do
+      Logger.debug("Using GPG to retrieve #{length(missing_keys)} missing signing keys")
 
-    case GPGex.cmd(
-           [
-             "--verify",
-             checksums_path
-           ],
-           keystore: keystore
-         ) do
-      {:ok, _, _} ->
-        File.rm_rf!(keystore_path)
+      {messages, _} =
+        GPGex.cmd!(["--keyserver", "hkps://keys.openpgp.org", "--recv-keys"] ++ missing_keys,
+          keystore: keystore
+        )
 
-      {:error, _, _, _} ->
-        raise "invalid signature"
+      imported_keys =
+        Enum.flat_map(messages, fn msg ->
+          case String.starts_with?(msg, "IMPORT_OK") do
+            true ->
+              [_, _, key_id] = String.split(msg, " ", parts: 3)
+              [key_id]
+
+            false ->
+              []
+          end
+        end)
+
+      still_missing_keys = missing_keys -- imported_keys
+
+      # because some keys are unverified on keys.openpgp.org,
+      # we make a subsequent call to the Ubuntu keyserver
+      IO.inspect(
+        GPGex.cmd!(
+          ["--keyserver", "hkps://keyserver.ubuntu.com", "--recv-keys"] ++ still_missing_keys,
+          keystore: keystore
+        )
+      )
     end
+
+    result = GPGex.cmd(["--verify", checksums_path], keystore: keystore)
+
+    if elem(result, 0) == :error, do: raise("invalid signature")
 
     Logger.debug("Checksums signature OK")
 
@@ -162,9 +187,12 @@ defmodule Nodelix.NodeDownloader do
         Path.expand("_build")
       end
 
+    base_path = Path.join([base_path, "nodelix"])
+
     File.mkdir_p!(base_path)
 
     %{
+      :keystore => Path.join(base_path, ".gnupg"),
       :archive => Path.join(base_path, "#{name}-#{target()}"),
       :checksums => Path.join(base_path, "SHASUMS256-#{name}.txt"),
       :signature => Path.join(base_path, "SHASUMS256-#{name}.txt.sig"),
