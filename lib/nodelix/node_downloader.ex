@@ -129,9 +129,7 @@ defmodule Nodelix.NodeDownloader do
       )
     end
 
-    result = GPGex.cmd(["--verify", checksums_path], keystore: keystore)
-
-    if elem(result, 0) == :error, do: raise("invalid signature")
+    GPGex.cmd!(["--verify", checksums_path], keystore: keystore)
 
     Logger.debug("Checksums signature OK")
 
