@@ -45,7 +45,7 @@ defmodule Nodelix.MixProject do
 
   def application do
     [
-      extra_applications: [:logger, inets: :optional, ssl: :optional],
+      extra_applications: [:crypto, :logger, inets: :optional, ssl: :optional],
       mod: {Nodelix, []},
       env: [default: []]
     ]

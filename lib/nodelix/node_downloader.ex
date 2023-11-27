@@ -7,7 +7,6 @@ defmodule Nodelix.NodeDownloader do
   @checksums_signature_base_url "https://nodejs.org/dist/v$version/SHASUMS256.txt.sig"
 
   @signing_keys_list_url "https://raw.githubusercontent.com/nodejs/release-keys/main/keys.list"
-  @signing_key_base_url "https://raw.githubusercontent.com/nodejs/release-keys/main/keys/$key_id.asc"
 
   require Logger
 
@@ -23,8 +22,9 @@ defmodule Nodelix.NodeDownloader do
   - [X] fetch Node.js signing keys list (https://raw.githubusercontent.com/nodejs/release-keys/main/keys.list)
   - [X] fetch keys (https://raw.githubusercontent.com/nodejs/release-keys/main/keys/4ED778F539E3634C779C87C6D7062848A1AB005C.asc)
   - [X] verify signature of the checksums file
-  - [ ] check integrity of the downloaded archive
+  - [X] check integrity of the downloaded archive
   - [ ] decompress archive (delete destination first, see https://github.com/phoenixframework/tailwind/pull/67)
+  - [ ] parameterize (instead of reading config) + refactor/cleanup (stop relying on side-effects)
   """
   def todo, do: []
 
@@ -69,14 +69,15 @@ defmodule Nodelix.NodeDownloader do
   def install(archive_base_url \\ @default_archive_base_url) do
     fetch_archive(archive_base_url)
     fetch_checksums_and_signature()
-    %{checksums: checksums_path, signature: signature_path} = paths()
-
-    verify_signature!(checksums_path, signature_path)
-
-    Logger.debug("Signature ok!")
+    verify_archive!()
   end
 
-  defp verify_signature!(file_path, signature_path) do
+  # - verifies checksums file signature
+  # - extracts the corresponding archive checksum
+  # - verifies archive checksum matches
+  defp verify_archive!() do
+    %{archive: archive_path, checksums: checksums_path, signature: signature_path} = paths()
+
     Logger.debug("Downloading signing keys list from #{@signing_keys_list_url}")
 
     signing_key_ids =
@@ -85,7 +86,7 @@ defmodule Nodelix.NodeDownloader do
       |> String.trim()
       |> String.split("\n")
 
-    Logger.debug("Using GPG to retrieve signing keys")
+    Logger.debug("Using GPG to retrieve #{length(signing_key_ids)} signing keys")
 
     %{path: keystore_path} = keystore = GPGex.Keystore.get_keystore_temp()
 
@@ -98,7 +99,7 @@ defmodule Nodelix.NodeDownloader do
            [
              "--verify",
              signature_path,
-             file_path
+             checksums_path
            ],
            keystore: keystore
          ) do
@@ -109,6 +110,30 @@ defmodule Nodelix.NodeDownloader do
       {:error, _, _, _} ->
         raise "invalid signature"
     end
+
+    Logger.debug("Cheksums signature OK")
+
+    checksums = File.read!(checksums_path)
+
+    checksum =
+      case Regex.named_captures(
+             ~r/^(?<checksum>.*?)\s+#{Regex.escape("#{name()}-#{target()}")}$/m,
+             checksums
+           ) do
+        %{"checksum" => checksum} ->
+          Base.decode16!(checksum, case: :lower)
+
+        _ ->
+          raise "Couldn't find checksum for node-v#{Nodelix.configured_version()}-#{target()} in #{checksums_path}"
+      end
+
+    archive_binary = File.read!(archive_path)
+
+    computed_checksum = :crypto.hash(:sha256, archive_binary)
+
+    computed_checksum == checksum or raise "invalid checksum"
+
+    Logger.debug("Archive integrity OK")
   end
 
   defp fetch_archive(archive_base_url) do
@@ -130,13 +155,13 @@ defmodule Nodelix.NodeDownloader do
     binary = HttpUtils.fetch_body!(checksums_url)
     File.write!(checksums_path, binary, [:binary])
 
-    Logger.debug("Downloading signature from #{checksums_signature_url}")
+    Logger.debug("Downloading checksums signature from #{checksums_signature_url}")
     binary = HttpUtils.fetch_body!(checksums_signature_url)
     File.write!(signature_path, binary, [:binary])
   end
 
   defp paths do
-    name = "node-#{Nodelix.configured_version()}"
+    name = name()
 
     base_path =
       if Code.ensure_loaded?(Mix.Project) do
@@ -155,6 +180,8 @@ defmodule Nodelix.NodeDownloader do
     }
   end
 
+  defp name, do: "node-v#{Nodelix.configured_version()}"
+
   # Available targets:
   # aix-ppc64.tar.gz
   # darwin-arm64.tar.gz
@@ -167,6 +194,7 @@ defmodule Nodelix.NodeDownloader do
   # win-arm64.zip
   # win-x64.zip
   # win-x86.zip
+
   defp target do
     arch_str = :erlang.system_info(:system_architecture)
     [arch | _] = arch_str |> List.to_string() |> String.split("-")
