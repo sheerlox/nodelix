@@ -16,14 +16,14 @@ defmodule Nodelix.NodeDownloader do
   @doc """
   TODO
   - [X] fetch Node.js archive for a version and platform (https://nodejs.org/dist/v20.10.0/)
-  - [X] fetch checksums file (https://nodejs.org/dist/v20.10.0/SHASUMS256.txt)
-  - [X] fetch checksums file signature (https://nodejs.org/dist/v20.10.0/SHASUMS256.txt.sig)
+  - [X] fetch checksums file (https://nodejs.org/dist/v20.10.0/SHASUMS256.txt.asc)
   - [X] fetch Node.js signing keys list (https://raw.githubusercontent.com/nodejs/release-keys/main/keys.list)
-  - [X] fetch keys (https://raw.githubusercontent.com/nodejs/release-keys/main/keys/4ED778F539E3634C779C87C6D7062848A1AB005C.asc)
-  - [X] verify signature of the checksums file
+  - [X] fetch keys (using GPG)
+  - [X] verify signature of the checksums file (using GPG)
   - [X] check integrity of the downloaded archive
-  - [ ] decompress archive (delete destination first, see https://github.com/phoenixframework/tailwind/pull/67)
-  - [ ] parameterize (instead of reading config) + refactor/cleanup (stop relying on side-effects)
+  - [X] decompress archive (delete destination first, see https://github.com/phoenixframework/tailwind/pull/67)
+  - [ ] parameterize (instead of reading config) + refactor/cleanup (stop chaining functions with side-effects,
+        use function arguments, and probably more)
   """
   def todo, do: []
 
@@ -42,10 +42,10 @@ defmodule Nodelix.NodeDownloader do
 
   The executable may not be available if it was not yet installed.
   """
-  def bin_path, do: Map.get(paths(), :node)
+  def bin_path, do: Path.join(Map.get(paths(), :destination), "bin/node")
 
   @doc """
-  Returns the version of the tailwind executable.
+  Returns the version of the node executable.
 
   Returns `{:ok, version_string}` on success or `:error` when the executable
   is not available.
@@ -54,8 +54,8 @@ defmodule Nodelix.NodeDownloader do
     path = bin_path()
 
     with true <- File.exists?(path),
-         {out, 0} <- System.cmd(path, ["--help"]),
-         [vsn] <- Regex.run(~r/tailwindcss v([^\s]+)/, out, capture: :all_but_first) do
+         {out, 0} <- System.cmd(path, ["--version"]),
+         [vsn] <- Regex.run(~r/v([^\s]+)/, out, capture: :all_but_first) do
       {:ok, vsn}
     else
       _ -> :error
@@ -69,6 +69,55 @@ defmodule Nodelix.NodeDownloader do
     fetch_archive(archive_base_url)
     fetch_checksums()
     verify_archive!()
+    unpack_archive()
+
+    Logger.debug(
+      "Succesfully installed Node.js v#{Nodelix.configured_version()} in #{Map.get(paths(), :destination)}"
+    )
+  end
+
+  defp unpack_archive() do
+    %{archive: archive_path, destination: destination, bin_dir: bin_path} = paths()
+
+    # MacOS doesn't recompute code signing information if a binary
+    # is overwritten with a new version, so we force creation of a new file
+    # https://github.com/phoenixframework/tailwind/issues/39
+    if File.exists?(destination), do: File.rm_rf!(destination)
+
+    # because of what seems to be a bug in `erl_tar`, we need to extract the archive
+    # in memory, write each file to the disk and then manually create the npm
+    # symlink (because it's causing an error if we try to write to disk directly,
+    # but is simply removed when extracting in memory): https://github.com/erlang/otp/issues/5765
+    # and restore file permissions (+x on `bin/*`)
+
+    archive = File.read!(archive_path)
+
+    content =
+      case :erl_tar.extract({:binary, archive}, [:memory, :compressed]) do
+        {:ok, content} -> content
+        other -> raise "couldn't unpack archive: #{inspect(other)}"
+      end
+
+    Enum.each(
+      content,
+      fn {path, content} ->
+        full_path = Path.join(destination, remove_leading_dir(path))
+        File.mkdir_p!(Path.dirname(full_path))
+        File.write!(full_path, content)
+      end
+    )
+
+    File.ln_s!(
+      Path.join(destination, "lib/node_modules/npm/bin/npm-cli.js"),
+      Path.join(bin_path, "npm")
+    )
+
+    Enum.map(File.ls!(bin_path), &File.chmod!(Path.join(bin_path, &1), 0o755))
+  end
+
+  defp remove_leading_dir(path) do
+    [_ | rest] = Path.split(path)
+    Path.join(rest)
   end
 
   # - verifies checksums file signature
@@ -121,17 +170,13 @@ defmodule Nodelix.NodeDownloader do
 
       # because some keys are unverified on keys.openpgp.org,
       # we make a subsequent call to the Ubuntu keyserver
-      IO.inspect(
-        GPGex.cmd!(
-          ["--keyserver", "hkps://keyserver.ubuntu.com", "--recv-keys"] ++ still_missing_keys,
-          keystore: keystore
-        )
+      GPGex.cmd!(
+        ["--keyserver", "hkps://keyserver.ubuntu.com", "--recv-keys"] ++ still_missing_keys,
+        keystore: keystore
       )
     end
 
     GPGex.cmd!(["--verify", checksums_path], keystore: keystore)
-
-    Logger.debug("Checksums signature OK")
 
     checksums = File.read!(checksums_path)
 
@@ -152,8 +197,6 @@ defmodule Nodelix.NodeDownloader do
     computed_checksum = :crypto.hash(:sha256, archive_binary)
 
     computed_checksum == checksum or raise "invalid checksum"
-
-    Logger.debug("Archive integrity OK")
   end
 
   defp fetch_archive(archive_base_url) do
@@ -189,12 +232,15 @@ defmodule Nodelix.NodeDownloader do
 
     File.mkdir_p!(base_path)
 
+    destination = Path.join([base_path, "versions", Nodelix.configured_version()])
+
     %{
-      :keystore => Path.join(base_path, ".gnupg"),
+      :destination => destination,
+      :bin_dir => Path.join(destination, "bin"),
       :archive => Path.join(base_path, "#{name}-#{target()}"),
       :checksums => Path.join(base_path, "SHASUMS256-#{name}.txt"),
       :signature => Path.join(base_path, "SHASUMS256-#{name}.txt.sig"),
-      :node => Path.join(base_path, "#{name}/bin/node")
+      :keystore => Path.join(base_path, ".gnupg")
     }
   end
 
