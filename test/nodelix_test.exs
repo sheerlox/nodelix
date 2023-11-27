@@ -10,7 +10,7 @@ defmodule NodelixTest do
 
   test "run on default" do
     assert ExUnit.CaptureIO.capture_io(fn ->
-             assert Nodelix.run(:default, ["--help"]) == 0
+             assert Nodelix.run(:default, ["--version"]) == 0
            end) =~ @version
   end
 
@@ -25,7 +25,7 @@ defmodule NodelixTest do
     Mix.Task.rerun("nodelix.install", ["--if-missing"])
 
     assert ExUnit.CaptureIO.capture_io(fn ->
-             assert Nodelix.run(:default, ["--help"]) == 0
+             assert Nodelix.run(:default, ["--version"]) == 0
            end) =~ "20.9.0"
 
     Application.delete_env(:nodelix, :version)
@@ -33,7 +33,7 @@ defmodule NodelixTest do
     Mix.Task.rerun("nodelix.install", ["--if-missing"])
 
     assert ExUnit.CaptureIO.capture_io(fn ->
-             assert Nodelix.run(:default, ["--help"]) == 0
+             assert Nodelix.run(:default, ["--version"]) == 0
            end) =~ @version
   end
 
