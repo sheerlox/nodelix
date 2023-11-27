@@ -3,8 +3,7 @@ defmodule Nodelix.NodeDownloader do
   @latest_lts_version "20.10.0"
 
   @default_archive_base_url "https://nodejs.org/dist/v$version/node-v$version-$target"
-  @checksums_base_url "https://nodejs.org/dist/v$version/SHASUMS256.txt"
-  @checksums_signature_base_url "https://nodejs.org/dist/v$version/SHASUMS256.txt.sig"
+  @signed_checksums_base_url "https://nodejs.org/dist/v$version/SHASUMS256.txt.asc"
 
   @signing_keys_list_url "https://raw.githubusercontent.com/nodejs/release-keys/main/keys.list"
 
@@ -68,7 +67,7 @@ defmodule Nodelix.NodeDownloader do
   """
   def install(archive_base_url \\ @default_archive_base_url) do
     fetch_archive(archive_base_url)
-    fetch_checksums_and_signature()
+    fetch_checksums()
     verify_archive!()
   end
 
@@ -76,7 +75,7 @@ defmodule Nodelix.NodeDownloader do
   # - extracts the corresponding archive checksum
   # - verifies archive checksum matches
   defp verify_archive!() do
-    %{archive: archive_path, checksums: checksums_path, signature: signature_path} = paths()
+    %{archive: archive_path, checksums: checksums_path} = paths()
 
     Logger.debug("Downloading signing keys list from #{@signing_keys_list_url}")
 
@@ -98,20 +97,18 @@ defmodule Nodelix.NodeDownloader do
     case GPGex.cmd(
            [
              "--verify",
-             signature_path,
              checksums_path
            ],
            keystore: keystore
          ) do
       {:ok, _, _} ->
         File.rm_rf!(keystore_path)
-        :ok
 
       {:error, _, _, _} ->
         raise "invalid signature"
     end
 
-    Logger.debug("Cheksums signature OK")
+    Logger.debug("Checksums signature OK")
 
     checksums = File.read!(checksums_path)
 
@@ -145,19 +142,14 @@ defmodule Nodelix.NodeDownloader do
     File.write!(archive_path, binary, [:binary])
   end
 
-  defp fetch_checksums_and_signature() do
-    checksums_url = get_url(@checksums_base_url)
-    checksums_signature_url = get_url(@checksums_signature_base_url)
+  defp fetch_checksums() do
+    checksums_url = get_url(@signed_checksums_base_url)
 
-    %{checksums: checksums_path, signature: signature_path} = paths()
+    %{checksums: checksums_path} = paths()
 
-    Logger.debug("Downloading checksums from #{checksums_url}")
+    Logger.debug("Downloading signed checksums from #{checksums_url}")
     binary = HttpUtils.fetch_body!(checksums_url)
     File.write!(checksums_path, binary, [:binary])
-
-    Logger.debug("Downloading checksums signature from #{checksums_signature_url}")
-    binary = HttpUtils.fetch_body!(checksums_signature_url)
-    File.write!(signature_path, binary, [:binary])
   end
 
   defp paths do
