@@ -8,13 +8,38 @@ defmodule Nodelix.MixProject do
     [
       app: :nodelix,
       version: @version,
-      elixir: "~> 1.12.3 or ~> 1.13",
+      elixir: "~> 1.12",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
+      dialyzer: dialyzer(),
       description: description(),
       package: package(),
       docs: docs(),
       aliases: [test: ["nodelix.install --if-missing", "test"]]
+    ]
+  end
+
+  def application do
+    [
+      extra_applications: [:crypto, :logger, inets: :optional, ssl: :optional],
+      mod: {Nodelix, []},
+      env: [default: []]
+    ]
+  end
+
+  defp deps do
+    [
+      {:gpg_ex, "1.0.0-alpha.3"},
+      {:castore, "~> 1.0"},
+      {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
+      {:ex_doc, ">= 0.0.0", only: :dev, runtime: false}
+    ]
+  end
+
+  defp dialyzer() do
+    [
+      plt_local_path: "priv/plts/project.plt",
+      plt_core_path: "priv/plts/core.plt"
     ]
   end
 
@@ -40,22 +65,6 @@ defmodule Nodelix.MixProject do
       source_ref: "v#{@version}",
       canonical: "http://hexdocs.pm/nodelix",
       extras: ["README.md", "CHANGELOG.md", "LICENSE.md"]
-    ]
-  end
-
-  def application do
-    [
-      extra_applications: [:crypto, :logger, inets: :optional, ssl: :optional],
-      mod: {Nodelix, []},
-      env: [default: []]
-    ]
-  end
-
-  defp deps do
-    [
-      {:gpg_ex, "1.0.0-alpha.3"},
-      {:castore, "~> 1.0"},
-      {:ex_doc, ">= 0.0.0", only: :dev, runtime: false}
     ]
   end
 end

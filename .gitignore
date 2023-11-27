@@ -27,3 +27,7 @@ nodelix-*.tar
 
 # Node.js dependencies directory
 node_modules
+
+# Dialyzer
+/priv/plts/*.plt
+/priv/plts/*.plt.hash
