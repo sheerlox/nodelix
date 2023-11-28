@@ -1,3 +1,12 @@
+Changelog
+
+## [1.0.0-alpha.4](https://github.com/sheerlox/nodelix/compare/v1.0.0-alpha.3...v1.0.0-alpha.4) (2023-11-28)
+
+
+### ✨ Features
+
+* add Node.js `VersionManager` module & Mix tasks ([#1](https://github.com/sheerlox/nodelix/issues/1)) ([cc5d14d](https://github.com/sheerlox/nodelix/commit/cc5d14d678a8db3fa130398efc340648d741d376))
+
 # Changelog
 
 ## [1.0.0-alpha.3](https://github.com/sheerlox/nodelix/compare/v1.0.0-alpha.2...v1.0.0-alpha.3) (2023-11-24)
