@@ -24,7 +24,7 @@
     [
       "@semantic-release/changelog",
       {
-        "changelogTitle": "Changelog"
+        "changelogTitle": "# Changelog"
       }
     ],
     "semantic-release-hex",
@@ -43,8 +43,7 @@
     [
       "@semantic-release/exec",
       {
-        "publishCmd": "mix hex.publish --yes",
-        "failCommand": "mix hex.publish --revert ${nextRelease.version} --yes"
+        "publishCmd": "mix hex.publish --yes"
       }
     ]
   ]
