@@ -14,8 +14,7 @@ defmodule Nodelix.MixProject do
       dialyzer: dialyzer(),
       description: description(),
       package: package(),
-      docs: docs(),
-      aliases: [test: ["nodelix.install --if-missing", "test"]]
+      docs: docs()
     ]
   end
 

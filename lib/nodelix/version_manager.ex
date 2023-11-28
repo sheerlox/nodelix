@@ -1,8 +1,8 @@
-defmodule Nodelix.NodeDownloader do
+defmodule Nodelix.VersionManager do
   # https://nodejs.org/en/about/previous-releases
   @latest_lts_version "20.10.0"
 
-  @default_archive_base_url "https://nodejs.org/dist/v$version/node-v$version-$target"
+  @default_archive_base_url "https://nodejs.org/dist/v$version/node-v$version-$target.$ext"
   @signed_checksums_base_url "https://nodejs.org/dist/v$version/SHASUMS256.txt.asc"
 
   @signing_keys_list_url "https://raw.githubusercontent.com/nodejs/release-keys/main/keys.list"
@@ -14,70 +14,69 @@ defmodule Nodelix.NodeDownloader do
   @moduledoc false
 
   @doc """
-  TODO
-  - [X] fetch Node.js archive for a version and platform (https://nodejs.org/dist/v20.10.0/)
-  - [X] fetch checksums file (https://nodejs.org/dist/v20.10.0/SHASUMS256.txt.asc)
-  - [X] fetch Node.js signing keys list (https://raw.githubusercontent.com/nodejs/release-keys/main/keys.list)
-  - [X] fetch keys (using GPG)
-  - [X] verify signature of the checksums file (using GPG)
-  - [X] check integrity of the downloaded archive
-  - [X] decompress archive (delete destination first, see https://github.com/phoenixframework/tailwind/pull/67)
-  - [ ] parameterize (instead of reading config) + refactor/cleanup (stop chaining functions with side-effects,
-        use function arguments, and probably more)
-  """
-  def todo, do: []
-
-  @doc """
   Returns the latest known LTS version at the time of publishing.
   """
+  @spec latest_lts_version() :: String.t()
   def latest_lts_version, do: @latest_lts_version
 
   @doc """
   The default URL to fetch the Node.js archive from.
   """
+  @spec default_archive_base_url() :: String.t()
   def default_archive_base_url, do: @default_archive_base_url
 
   @doc """
-  Returns the path to the node executable.
+  Returns the path to the requested executable.
 
   The executable may not be available if it was not yet installed.
   """
-  def bin_path, do: Path.join(Map.get(paths(), :destination), "bin/node")
+  @spec bin_path(:node | :npm, String.t()) :: String.t()
+  def bin_path(:node, version) when is_binary(version), do: bin_path_p("node", version)
+  def bin_path(:npm, version) when is_binary(version), do: bin_path_p("npm", version)
+
+  defp bin_path_p(program, version),
+    do: Path.join([Map.get(paths(version), :bin_dir), program])
 
   @doc """
-  Returns the version of the node executable.
-
-  Returns `{:ok, version_string}` on success or `:error` when the executable
-  is not available.
+  Checks if the specified Node.js version is installed.
   """
-  def bin_version do
-    path = bin_path()
+  @spec is_installed?(String.t()) :: boolean()
+  def is_installed?(version) do
+    node = bin_path(:node, version)
 
-    with true <- File.exists?(path),
-         {out, 0} <- System.cmd(path, ["--version"]),
-         [vsn] <- Regex.run(~r/v([^\s]+)/, out, capture: :all_but_first) do
-      {:ok, vsn}
+    with true <- File.exists?(node),
+         {out, 0} <- System.cmd(node, ["--version"]),
+         [^version] <- Regex.run(~r/v([^\s]+)/, out, capture: :all_but_first) do
+      true
     else
-      _ -> :error
+      _ -> false
     end
   end
 
   @doc """
-  Installs Node.js with `configured_version/0`.
+  Installs the specified Node.js version.
   """
-  def install(archive_base_url \\ @default_archive_base_url) do
-    fetch_archive(archive_base_url)
-    fetch_checksums()
-    verify_archive!()
-    unpack_archive()
+  @spec install(String.t(), String.t()) :: :ok
+  def install(version, archive_base_url \\ @default_archive_base_url)
+      when is_binary(version) and is_binary(archive_base_url) do
+    %{nodelix: base_path} = paths(version)
+
+    File.mkdir_p!(base_path)
+
+    fetch_archive(version, archive_base_url)
+    fetch_checksums(version)
+    verify_archive!(version)
+    unpack_archive(version)
 
     Logger.debug(
-      "Succesfully installed Node.js v#{Nodelix.configured_version()} in #{Map.get(paths(), :destination)}"
+      "Succesfully installed Node.js v#{Nodelix.configured_version()} in #{Map.get(paths(version), :destination)}"
     )
+
+    :ok
   end
 
-  defp unpack_archive() do
-    %{archive: archive_path, destination: destination, bin_dir: bin_path} = paths()
+  defp unpack_archive(version) do
+    %{archive: archive_path, destination: destination, bin_dir: bin_path} = paths(version)
 
     # MacOS doesn't recompute code signing information if a binary
     # is overwritten with a new version, so we force creation of a new file
@@ -108,11 +107,13 @@ defmodule Nodelix.NodeDownloader do
     )
 
     File.ln_s!(
-      Path.join(destination, "lib/node_modules/npm/bin/npm-cli.js"),
+      Path.join([destination, "lib", "node_modules", "npm", "bin", "npm-cli.js"]),
       Path.join(bin_path, "npm")
     )
 
     Enum.map(File.ls!(bin_path), &File.chmod!(Path.join(bin_path, &1), 0o755))
+
+    File.rm!(archive_path)
   end
 
   defp remove_leading_dir(path) do
@@ -123,8 +124,8 @@ defmodule Nodelix.NodeDownloader do
   # - verifies checksums file signature
   # - extracts the corresponding archive checksum
   # - verifies archive checksum matches
-  defp verify_archive!() do
-    %{archive: archive_path, checksums: checksums_path, keystore: keystore_path} = paths()
+  defp verify_archive!(version) do
+    %{archive: archive_path, checksums: checksums_path, keystore: keystore_path} = paths(version)
 
     Logger.debug("Downloading signing keys list from #{@signing_keys_list_url}")
 
@@ -179,17 +180,18 @@ defmodule Nodelix.NodeDownloader do
     GPGex.cmd!(["--verify", checksums_path], keystore: keystore)
 
     checksums = File.read!(checksums_path)
+    filename = archive_name(version)
 
     checksum =
       case Regex.named_captures(
-             ~r/^(?<checksum>.*?)\s+#{Regex.escape("#{name()}-#{target()}")}$/m,
+             ~r/^(?<checksum>.*?)\s+#{Regex.escape(filename)}$/m,
              checksums
            ) do
         %{"checksum" => checksum} ->
           Base.decode16!(checksum, case: :lower)
 
         _ ->
-          raise "Couldn't find checksum for node-v#{Nodelix.configured_version()}-#{target()} in #{checksums_path}"
+          raise "Couldn't find checksum for #{filename} in #{checksums_path}"
       end
 
     archive_binary = File.read!(archive_path)
@@ -199,83 +201,76 @@ defmodule Nodelix.NodeDownloader do
     computed_checksum == checksum or raise "invalid checksum"
   end
 
-  defp fetch_archive(archive_base_url) do
+  defp fetch_archive(version, archive_base_url) do
     archive_url = get_url(archive_base_url)
-    %{archive: archive_path} = paths()
+    %{archive: archive_path} = paths(version)
 
     Logger.debug("Downloading Node.js from #{archive_url}")
     binary = HttpUtils.fetch_body!(archive_url)
     File.write!(archive_path, binary, [:binary])
   end
 
-  defp fetch_checksums() do
+  defp fetch_checksums(version) do
     checksums_url = get_url(@signed_checksums_base_url)
 
-    %{checksums: checksums_path} = paths()
+    %{checksums: checksums_path} = paths(version)
 
     Logger.debug("Downloading signed checksums from #{checksums_url}")
     binary = HttpUtils.fetch_body!(checksums_url)
     File.write!(checksums_path, binary, [:binary])
   end
 
-  defp paths do
-    name = name()
+  defp name(version), do: "node-v#{version}"
+  defp archive_name(version), do: "node-v#{version}-#{target()}.#{extension()}"
+
+  defp paths(version) do
+    name = name(version)
 
     base_path =
       if Code.ensure_loaded?(Mix.Project) do
-        Path.dirname(Mix.Project.build_path())
+        Mix.Project.build_path()
       else
         Path.expand("_build")
       end
 
-    base_path = Path.join([base_path, "nodelix"])
-
-    File.mkdir_p!(base_path)
-
-    destination = Path.join([base_path, "versions", Nodelix.configured_version()])
+    base_path = Path.join([base_path, "nodejs"])
+    destination = Path.join([base_path, "versions", version])
 
     %{
+      :nodelix => base_path,
       :destination => destination,
       :bin_dir => Path.join(destination, "bin"),
-      :archive => Path.join(base_path, "#{name}-#{target()}"),
+      :archive => Path.join(base_path, archive_name(version)),
       :checksums => Path.join(base_path, "SHASUMS256-#{name}.txt"),
       :signature => Path.join(base_path, "SHASUMS256-#{name}.txt.sig"),
       :keystore => Path.join(base_path, ".gnupg")
     }
   end
 
-  defp name, do: "node-v#{Nodelix.configured_version()}"
-
-  # Available targets:
-  # aix-ppc64.tar.gz
-  # darwin-arm64.tar.gz
-  # darwin-x64.tar.gz
-  # linux-arm64.tar.gz
-  # linux-armv7l.tar.gz
-  # linux-ppc64le.tar.gz
-  # linux-s390x.tar.gz
-  # linux-x64.tar.gz
-  # win-arm64.zip
-  # win-x64.zip
-  # win-x86.zip
-
   defp target do
     arch_str = :erlang.system_info(:system_architecture)
     [arch | _] = arch_str |> List.to_string() |> String.split("-")
 
     case {:os.type(), arch, :erlang.system_info(:wordsize) * 8} do
-      {{:unix, :aix}, "ppc64", 64} -> "aix-ppc64.tar.gz"
-      {{:unix, :darwin}, arch, 64} when arch in ~w(arm aarch64) -> "darwin-arm64.tar.gz"
-      {{:unix, :darwin}, "x86_64", 64} -> "darwin-x64.tar.gz"
-      {{:unix, :linux}, "aarch64", 64} -> "linux-arm64.tar.gz"
-      {{:unix, :linux}, "armv7l", 32} -> "linux-armv7l.tar.gz"
-      {{:unix, :linux}, "ppc64le", 64} -> "linux-ppc64le.tar.gz"
-      {{:unix, :linux}, "s390x", 32} -> "linux-s390x.tar.gz"
-      {{:unix, _osname}, arch, 64} when arch in ~w(x86_64 amd64) -> "linux-x64.tar.gz"
-      {{:win32, _}, "aarch64", 64} -> "win-arm64.zip"
-      {{:win32, _}, _arch, 64} -> "win-x64.zip"
-      {{:win32, _}, _arch, 32} -> "win-x86.zip"
+      {{:unix, :aix}, "ppc64", 64} -> "aix-ppc64"
+      {{:unix, :darwin}, arch, 64} when arch in ~w(arm aarch64) -> "darwin-arm64"
+      {{:unix, :darwin}, "x86_64", 64} -> "darwin-x64"
+      {{:unix, :linux}, "aarch64", 64} -> "linux-arm64"
+      {{:unix, :linux}, "armv7l", 32} -> "linux-armv7l"
+      {{:unix, :linux}, "ppc64le", 64} -> "linux-ppc64le"
+      {{:unix, :linux}, "s390x", 32} -> "linux-s390x"
+      {{:unix, _osname}, arch, 64} when arch in ~w(x86_64 amd64) -> "linux-x64"
+      {{:win32, _}, "aarch64", 64} -> "win-arm64"
+      {{:win32, _}, _arch, 64} -> "win-x64"
+      {{:win32, _}, _arch, 32} -> "win-x86"
       {_os, _arch, _wordsize} -> raise "Node.js is not available for architecture: #{arch_str}"
+    end
+  end
+
+  defp extension do
+    case :os.type() do
+      {:unix, _} -> "tar.gz"
+      {:win32, _} -> "zip"
     end
   end
 
@@ -283,5 +278,6 @@ defmodule Nodelix.NodeDownloader do
     base_url
     |> String.replace("$version", Nodelix.configured_version())
     |> String.replace("$target", target())
+    |> String.replace("$ext", extension())
   end
 end

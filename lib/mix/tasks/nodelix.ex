@@ -10,7 +10,7 @@ defmodule Mix.Tasks.Nodelix do
 
   Example:
 
-      $ mix nodelix default --tls-min-v1.3
+      $ mix nodelix default some-script.js --some-option
 
   If Node.js is not installed, it is automatically downloaded.
   The arguments given to this task will be appended
@@ -24,7 +24,7 @@ defmodule Mix.Tasks.Nodelix do
   Flags to control this Mix task must be given before the
   profile:
 
-      $ mix nodelix --runtime-config default
+      $ mix nodelix --runtime-config default some-script.js --some-option
   """
 
   @shortdoc "Invokes node with the profile and args"

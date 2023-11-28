@@ -1,7 +1,7 @@
 defmodule Mix.Tasks.Nodelix.Install do
   use Mix.Task
 
-  alias Nodelix.NodeDownloader
+  alias Nodelix.VersionManager
 
   @moduledoc """
   Installs Node.js.
@@ -9,10 +9,10 @@ defmodule Mix.Tasks.Nodelix.Install do
       $ mix nodelix.install
       $ mix nodelix.install --if-missing
 
-  By default, it installs #{NodeDownloader.latest_lts_version()} but you
+  By default, it installs #{VersionManager.latest_lts_version()} but you
   can configure it in your config files, such as:
 
-      config :nodelix, :version, "#{NodeDownloader.latest_lts_version()}"
+      config :nodelix, :version, "#{VersionManager.latest_lts_version()}"
 
   ## Options
 
@@ -34,7 +34,7 @@ defmodule Mix.Tasks.Nodelix.Install do
     {opts, archive_base_url} =
       case OptionParser.parse_head!(args, strict: valid_options) do
         {opts, []} ->
-          {opts, NodeDownloader.default_archive_base_url()}
+          {opts, VersionManager.default_archive_base_url()}
 
         {opts, [archive_base_url]} ->
           {opts, archive_base_url}
@@ -44,7 +44,7 @@ defmodule Mix.Tasks.Nodelix.Install do
           Invalid arguments to nodelix.install, expected one of:
 
               mix nodelix.install
-              mix nodelix.install 'https://nodejs.org/dist/v$version/node-v$version-$target'
+              mix nodelix.install 'https://nodejs.org/dist/v$version/node-v$version-$target.$ext'
               mix nodelix.install --runtime-config
               mix nodelix.install --if-missing
           """)
@@ -52,7 +52,9 @@ defmodule Mix.Tasks.Nodelix.Install do
 
     if opts[:runtime_config], do: Mix.Task.run("app.config")
 
-    if opts[:if_missing] && latest_lts_version?() do
+    configured_version = Nodelix.configured_version()
+
+    if opts[:if_missing] && VersionManager.is_installed?(configured_version) do
       :ok
     else
       if function_exported?(Mix, :ensure_application!, 1) do
@@ -61,12 +63,7 @@ defmodule Mix.Tasks.Nodelix.Install do
       end
 
       Mix.Task.run("loadpaths")
-      NodeDownloader.install(archive_base_url)
+      VersionManager.install(configured_version, archive_base_url)
     end
-  end
-
-  defp latest_lts_version?() do
-    version = Nodelix.configured_version()
-    match?({:ok, ^version}, NodeDownloader.bin_version())
   end
 end

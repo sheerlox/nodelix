@@ -2,7 +2,7 @@ defmodule Nodelix do
   use Application
   require Logger
 
-  alias Nodelix.NodeDownloader
+  alias Nodelix.VersionManager
 
   @moduledoc """
   Nodelix is an installer and runner for [Node.js](https://nodejs.org/).
@@ -14,13 +14,16 @@ defmodule Nodelix do
   directory and environment:
 
       config :nodelix,
-        version: "#{NodeDownloader.latest_lts_version()}",
+        version: "#{VersionManager.latest_lts_version()}",
         default: [
           args: ~w(
-            --version
+            some-script.js
+            --some-option
           ),
           cd: Path.expand("../assets", __DIR__),
         ]
+
+  The default current directory is your project's root.
 
   ## Nodelix configuration
 
@@ -39,24 +42,8 @@ defmodule Nodelix do
       Logger.warning("""
       Node.js version is not configured. Please set it in your config files:
 
-          config :nodelix, :version, "#{NodeDownloader.latest_lts_version()}"
+          config :nodelix, :version, "#{VersionManager.latest_lts_version()}"
       """)
-    end
-
-    configured_version = configured_version()
-
-    case NodeDownloader.bin_version() do
-      {:ok, ^configured_version} ->
-        :ok
-
-      {:ok, version} ->
-        Logger.warning("""
-        Outdated Node.js version. Expected #{configured_version}, got #{version}. \
-        Please run `mix nodelix.install` or update the version in your config files.\
-        """)
-
-      :error ->
-        :ok
     end
 
     Supervisor.start_link([], strategy: :one_for_one)
@@ -66,7 +53,7 @@ defmodule Nodelix do
   Returns the configured Node.js version.
   """
   def configured_version do
-    Application.get_env(:nodelix, :version, NodeDownloader.latest_lts_version())
+    Application.get_env(:nodelix, :version, VersionManager.latest_lts_version())
   end
 
   @doc """
@@ -77,13 +64,14 @@ defmodule Nodelix do
   def config_for!(profile) when is_atom(profile) do
     Application.get_env(:nodelix, profile) ||
       raise ArgumentError, """
-      unknown nodelix profile. Make sure the profile is defined in your config/config.exs file, such as:
+      Unknown nodelix profile. Make sure the profile is defined in your config/config.exs file, such as:
 
           config :nodelix,
-            version: "#{NodeDownloader.latest_lts_version()}",
+            version: "#{VersionManager.latest_lts_version()}",
             #{profile}: [
               args: ~w(
-                --version
+                some-script.js
+                --some-option
               ),
               cd: Path.expand("../assets", __DIR__)
             ]
@@ -97,14 +85,15 @@ defmodule Nodelix do
   The task output will be streamed directly to stdio. It
   returns the status of the underlying call.
   """
-  def run(profile, extra_args) when is_atom(profile) and is_list(extra_args) do
+  def run(profile, extra_args \\ []) when is_atom(profile) and is_list(extra_args) do
     config = config_for!(profile)
-    args = config[:args] || []
+    args = (config[:args] || []) ++ extra_args
+
+    if length(args) == 0, do: raise(ArgumentError, "No argument provided.")
 
     env =
       config
       |> Keyword.get(:env, %{})
-      |> add_env_variable_to_ignore_browserslist_outdated_warning()
 
     opts = [
       cd: config[:cd] || File.cwd!(),
@@ -113,13 +102,9 @@ defmodule Nodelix do
       stderr_to_stdout: true
     ]
 
-    NodeDownloader.bin_path()
-    |> System.cmd(args ++ extra_args, opts)
+    VersionManager.bin_path(:node, Nodelix.configured_version())
+    |> System.cmd(args, opts)
     |> elem(1)
-  end
-
-  defp add_env_variable_to_ignore_browserslist_outdated_warning(env) do
-    Enum.into(env, %{"BROWSERSLIST_IGNORE_OLD_DATA" => "1"})
   end
 
   @doc """
@@ -128,8 +113,10 @@ defmodule Nodelix do
   Returns the same as `run/2`.
   """
   def install_and_run(profile, args) do
-    unless File.exists?(NodeDownloader.bin_path()) do
-      NodeDownloader.install()
+    version = configured_version()
+
+    unless VersionManager.is_installed?(version) do
+      VersionManager.install(version)
     end
 
     run(profile, args)
