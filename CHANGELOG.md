@@ -1,3 +1,17 @@
+# Changelog
+
+## [1.0.0-alpha.5](https://github.com/sheerlox/nodelix/compare/v1.0.0-alpha.4...v1.0.0-alpha.5) (2023-11-28)
+
+
+### 🛠 Builds
+
+* update dependency semantic-release-hex to v1.1.1 ([df783d9](https://github.com/sheerlox/nodelix/commit/df783d9fb2b2fdb5cbb42ce35597c85ecfd6c795))
+
+
+### ⚙️ Continuous Integrations
+
+* update semantic-release config ([06e13e0](https://github.com/sheerlox/nodelix/commit/06e13e078d30b0ff639c0be7b403d36fae5f4981))
+
 Changelog
 
 ## [1.0.0-alpha.4](https://github.com/sheerlox/nodelix/compare/v1.0.0-alpha.3...v1.0.0-alpha.4) (2023-11-28)
