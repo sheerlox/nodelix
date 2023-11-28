@@ -18,6 +18,7 @@ limitations under the License.
 
 ## `tailwind` (MIT)
 
+Copyright (c) 2022 Chris McCord.
 Copyright (c) 2021 Wojtek Mach, José Valim.
 
 Permission is hereby granted, free of charge, to any person obtaining
