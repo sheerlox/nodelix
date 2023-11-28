@@ -21,7 +21,13 @@ defmodule Nodelix.MixProject do
 
   def application do
     [
-      extra_applications: [:crypto, :logger, inets: :optional, ssl: :optional],
+      extra_applications: [
+        :crypto,
+        :logger,
+        :public_key,
+        inets: :optional,
+        ssl: :optional
+      ],
       mod: {Nodelix, []},
       env: [default: []]
     ]
@@ -38,6 +44,7 @@ defmodule Nodelix.MixProject do
 
   defp dialyzer() do
     [
+      plt_add_apps: [:mix, :inets],
       plt_local_path: "priv/plts/project.plt",
       plt_core_path: "priv/plts/core.plt"
     ]

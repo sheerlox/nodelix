@@ -25,8 +25,9 @@ defmodule Mix.Tasks.Nodelix.Install do
 
   @shortdoc "Installs Node.js"
   @compile {:no_warn_undefined, Mix}
+  @dialyzer {:no_missing_calls, run: 1}
 
-  @impl true
+  @impl Mix.Task
   def run(args) do
     valid_options = [runtime_config: :boolean, if_missing: :boolean, assets: :boolean]
 

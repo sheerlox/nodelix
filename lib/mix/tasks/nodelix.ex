@@ -29,8 +29,9 @@ defmodule Mix.Tasks.Nodelix do
 
   @shortdoc "Invokes node with the profile and args"
   @compile {:no_warn_undefined, Mix}
+  @dialyzer {:no_missing_calls, run: 1}
 
-  @impl true
+  @impl Mix.Task
   def run(args) do
     switches = [runtime_config: :boolean]
     {opts, remaining_args} = OptionParser.parse_head!(args, switches: switches)
