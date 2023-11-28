@@ -4,6 +4,11 @@ defmodule Mix.Tasks.Nodelix do
   @moduledoc """
   Invokes `node` with the given args.
 
+  > ### Warning {: .warning}
+  >
+  > This is a pre-release version. As such, anything _may_ change at any time, the public
+  > API _should not_ be considered stable, and using a pinned version is _recommended_.
+
   Usage:
 
       $ mix nodelix TASK_OPTIONS PROFILE NODE_ARGS

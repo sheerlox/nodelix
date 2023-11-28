@@ -7,6 +7,11 @@ defmodule Nodelix do
   @moduledoc """
   Nodelix is an installer and runner for [Node.js](https://nodejs.org/).
 
+  > ### Warning {: .warning}
+  >
+  > This is a pre-release version. As such, anything _may_ change at any time, the public
+  > API _should not_ be considered stable, and using a pinned version is _recommended_.
+
   ## Profiles
 
   You can define multiple nodelix profiles. By default, there is a

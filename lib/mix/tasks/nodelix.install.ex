@@ -6,6 +6,11 @@ defmodule Mix.Tasks.Nodelix.Install do
   @moduledoc """
   Installs Node.js.
 
+  > ### Warning {: .warning}
+  >
+  > This is a pre-release version. As such, anything _may_ change at any time, the public
+  > API _should not_ be considered stable, and using a pinned version is _recommended_.
+
       $ mix nodelix.install
       $ mix nodelix.install --if-missing
 
