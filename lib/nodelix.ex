@@ -36,7 +36,7 @@ defmodule Nodelix do
   @doc false
   def start(_, _) do
     unless Application.get_env(:nodelix, :version) do
-      Logger.warn("""
+      Logger.warning("""
       Node.js version is not configured. Please set it in your config files:
 
           config :nodelix, :version, "#{NodeDownloader.latest_lts_version()}"
@@ -50,7 +50,7 @@ defmodule Nodelix do
         :ok
 
       {:ok, version} ->
-        Logger.warn("""
+        Logger.warning("""
         Outdated Node.js version. Expected #{configured_version}, got #{version}. \
         Please run `mix nodelix.install` or update the version in your config files.\
         """)
