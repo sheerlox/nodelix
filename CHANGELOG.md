@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.0-alpha.6](https://github.com/sheerlox/nodelix/compare/v1.0.0-alpha.5...v1.0.0-alpha.6) (2023-11-29)
+
+
+### 🛠 Builds
+
+* **deps:** update dependency gpg_ex to v1.0.0-alpha.4 ([3e1353f](https://github.com/sheerlox/nodelix/commit/3e1353f6ff443ec427651d49402a8e98073b1e37))
+
 ## [1.0.0-alpha.5](https://github.com/sheerlox/nodelix/compare/v1.0.0-alpha.4...v1.0.0-alpha.5) (2023-11-28)
 
 
