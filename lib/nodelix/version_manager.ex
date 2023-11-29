@@ -139,13 +139,7 @@ defmodule Nodelix.VersionManager do
 
     missing_keys =
       signing_key_ids
-      |> Enum.filter(fn key_id ->
-        with {:error, _, _, _} <- GPGex.cmd(["--list-keys", key_id], keystore: keystore) do
-          true
-        else
-          _ -> false
-        end
-      end)
+      |> Enum.filter(fn key_id -> !GPGex.cmd?(["--list-keys", key_id], keystore: keystore) end)
 
     if length(missing_keys) > 0 do
       Logger.debug("Using GPG to retrieve #{length(missing_keys)} missing signing keys")
