@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.0.0-alpha.7](https://github.com/sheerlox/nodelix/compare/v1.0.0-alpha.6...v1.0.0-alpha.7) (2023-11-29)
+
+
+### ⚠ Breaking changes
+
+* the profile is no longer the first argument of `mix nodelix`
+
+### ✨ Features
+
+* add `mix nodelix.npm` task ([8f3b22c](https://github.com/sheerlox/nodelix/commit/8f3b22c46ea5c79b3a1e9d817d66f81ebeca2f31))
+* make profile a task option ([47d05ed](https://github.com/sheerlox/nodelix/commit/47d05ed813bf5893ffabf56c93a7e80bfa8a9383))
+
 ## [1.0.0-alpha.6](https://github.com/sheerlox/nodelix/compare/v1.0.0-alpha.5...v1.0.0-alpha.6) (2023-11-29)
 
 
