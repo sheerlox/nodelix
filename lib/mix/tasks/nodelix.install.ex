@@ -21,11 +21,11 @@ defmodule Mix.Tasks.Nodelix.Install do
 
   ## Options
 
-      * `--runtime-config` - load the runtime configuration
-        before executing command
+    - `--runtime-config` - load the runtime configuration
+      before executing command
 
-      * `--if-missing` - install only if the given version
-        does not exist
+    - `--if-missing` - install only if the given version
+      does not exist
   """
 
   @shortdoc "Installs Node.js"

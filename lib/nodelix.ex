@@ -12,42 +12,64 @@ defmodule Nodelix do
   > This is a pre-release version. As such, anything _may_ change at any time, the public
   > API _should not_ be considered stable, and using a pinned version is _recommended_.
 
-  ## Profiles
-
-  You can define multiple nodelix profiles. By default, there is a
-  profile called `:default` which you can configure its args, current
-  directory and environment:
-
-      config :nodelix,
-        version: "#{VersionManager.latest_lts_version()}",
-        default: [
-          args: ~w(
-            some-script.js
-            --some-option
-          ),
-          cd: Path.expand("../assets", __DIR__),
-        ]
-
-  The default current directory is your project's root.
-
   ## Nodelix configuration
 
   There are two global configurations for the nodelix application:
 
-    * `:version` - the expected Node.js version
+  - `:version` - the Node.js version to use
 
-    * `:cacerts_path` - the directory to find certificates for
+  - `:cacerts_path` - the directory to find certificates for
       https connections
+
+  ## Profiles
+
+  You can define multiple nodelix profiles. There is a default empty profile
+  which you can configure its args, current directory and environment:
+
+  ```elixir
+  config :nodelix,
+  version: "#{VersionManager.latest_lts_version()}",
+  default: [
+    args: ~w(
+      some-script.js
+      --some-option
+    ),
+    cd: Path.expand("../assets", __DIR__),
+  ],
+  custom: [
+    args: ~w(
+      another-script.js
+      --another-option
+    ),
+    cd: Path.expand("../assets/scripts", __DIR__),
+  ]
+  ```
+
+  The default current directory is your project's root.
+
+  To use a profile other than `default`, you can use
+  the `--profile` option:
+
+  ```shell
+  mix nodelix --profile custom
+  ```
+
+  When `mix nodelix` is invoked, the task arguments will
+  be appended to the ones configured in the profile.
 
   """
 
   @doc false
   def start(_, _) do
     unless Application.get_env(:nodelix, :version) do
+      latest_lts_version = VersionManager.latest_lts_version()
+
       Logger.warning("""
       Node.js version is not configured. Please set it in your config files:
 
-          config :nodelix, :version, "#{VersionManager.latest_lts_version()}"
+          config :nodelix, :version, "#{latest_lts_version}"
+
+      Using latest known LTS version at the time of release: #{latest_lts_version}
       """)
     end
 
@@ -64,7 +86,7 @@ defmodule Nodelix do
   @doc """
   Returns the configuration for the given profile.
 
-  Returns nil if the profile does not exist.
+  Raises if the profile does not exist.
   """
   def config_for!(profile) when is_atom(profile) do
     Application.get_env(:nodelix, profile) ||
@@ -96,9 +118,7 @@ defmodule Nodelix do
 
     if length(args) == 0, do: raise(ArgumentError, "No argument provided.")
 
-    env =
-      config
-      |> Keyword.get(:env, %{})
+    env = Keyword.get(config, :env, %{})
 
     opts = [
       cd: config[:cd] || File.cwd!(),
@@ -113,7 +133,8 @@ defmodule Nodelix do
   end
 
   @doc """
-  Installs, if not available, and then runs `node`.
+  Installs Node.js if the configured version is not available,
+  and then runs `node`.
 
   Returns the same as `run/2`.
   """

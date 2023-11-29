@@ -2,7 +2,7 @@ defmodule Mix.Tasks.Nodelix do
   use Mix.Task
 
   @moduledoc """
-  Invokes `node` with the given args.
+  Invokes `node` with the provided arguments.
 
   > ### Warning {: .warning}
   >
@@ -11,35 +11,38 @@ defmodule Mix.Tasks.Nodelix do
 
   Usage:
 
-      $ mix nodelix TASK_OPTIONS PROFILE NODE_ARGS
+      $ mix nodelix TASK_OPTIONS NODE_ARGS
 
   Example:
 
-      $ mix nodelix default some-script.js --some-option
+      $ mix nodelix some-script.js --some-option
 
-  If Node.js is not installed, it is automatically downloaded.
-  The arguments given to this task will be appended
-  to any configured arguments.
+  Refer to `Nodelix` for more information on configuration and profiles.
 
   ## Options
 
-    * `--runtime-config` - load the runtime configuration
+    - `--profile` - name of the profile to use
+
+    - `--runtime-config` - load the runtime configuration
       before executing command
 
   Flags to control this Mix task must be given before the
-  profile:
+  node arguments:
 
-      $ mix nodelix --runtime-config default some-script.js --some-option
+      $ mix nodelix --profile default --runtime-config some-script.js --some-option
+
   """
 
-  @shortdoc "Invokes node with the profile and args"
+  @shortdoc "Invokes node with the provided arguments"
   @compile {:no_warn_undefined, Mix}
   @dialyzer {:no_missing_calls, run: 1}
 
   @impl Mix.Task
   def run(args) do
-    switches = [runtime_config: :boolean]
-    {opts, remaining_args} = OptionParser.parse_head!(args, switches: switches)
+    switches = [profile: :string, runtime_config: :boolean]
+
+    {opts, remaining_args, invalid_opts} = OptionParser.parse_head(args, strict: switches)
+    node_args = Enum.map(invalid_opts, &elem(&1, 0)) ++ remaining_args
 
     if function_exported?(Mix, :ensure_application!, 1) do
       Mix.ensure_application!(:inets)
@@ -53,8 +56,10 @@ defmodule Mix.Tasks.Nodelix do
       Application.ensure_all_started(:nodelix)
     end
 
+    profile = opts[:profile] || "default"
+
     Mix.Task.reenable("nodelix")
-    install_and_run(remaining_args)
+    install_and_run([profile | node_args])
   end
 
   defp install_and_run([profile | args] = all) do
@@ -62,9 +67,5 @@ defmodule Mix.Tasks.Nodelix do
       0 -> :ok
       status -> Mix.raise("`mix nodelix #{Enum.join(all, " ")}` exited with #{status}")
     end
-  end
-
-  defp install_and_run([]) do
-    Mix.raise("`mix nodelix` expects the profile as argument")
   end
 end

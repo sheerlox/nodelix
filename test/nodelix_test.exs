@@ -13,15 +13,15 @@ defmodule NodelixTest do
     :ok
   end
 
-  test "run on default" do
+  test "run without profile" do
     assert ExUnit.CaptureIO.capture_io(fn ->
-             assert Mix.Task.run("nodelix", ["default", "--version"]) == :ok
+             assert Mix.Task.run("nodelix", ["--version"]) == :ok
            end) =~ @version
   end
 
-  test "run on profile" do
+  test "run on another profile" do
     assert ExUnit.CaptureIO.capture_io(fn ->
-             assert Mix.Task.run("nodelix", ["another", "--version"]) == :ok
+             assert Mix.Task.run("nodelix", ["--profile", "another", "--version"]) == :ok
            end) =~ @version
   end
 
@@ -30,7 +30,7 @@ defmodule NodelixTest do
     Mix.Task.rerun("nodelix.install", ["--if-missing"])
 
     assert ExUnit.CaptureIO.capture_io(fn ->
-             assert Mix.Task.run("nodelix", ["default", "--version"]) == :ok
+             assert Mix.Task.run("nodelix", ["--version"]) == :ok
            end) =~ "20.9.0"
 
     Application.delete_env(:nodelix, :version)
@@ -38,7 +38,7 @@ defmodule NodelixTest do
     Mix.Task.rerun("nodelix.install", ["--if-missing"])
 
     assert ExUnit.CaptureIO.capture_io(fn ->
-             assert Mix.Task.run("nodelix", ["default", "--version"]) == :ok
+             assert Mix.Task.run("nodelix", ["--version"]) == :ok
            end) =~ @version
   end
 

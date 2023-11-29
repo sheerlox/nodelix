@@ -45,31 +45,57 @@ $ mix nodelix.install
 And invoke Node.js with:
 
 ```shell
-$ mix nodelix default some-script.js --some-option
+$ mix nodelix some-script.js --some-option
 ```
 
 The Node.js installation is located at `_build/dev/nodejs/versions/$VERSION`.
 
+## Nodelix configuration
+
+There are two global configurations for the nodelix application:
+
+- `:version` - the Node.js version to use
+
+- `:cacerts_path` - the directory to find certificates for
+  https connections
+
 ## Profiles
 
-You can define multiple nodelix profiles. By default, there is a
-profile called `:default` which you can configure its args, current
-directory and environment:
+You can define multiple nodelix profiles. There is a default empty profile
+which you can configure its args, current directory and environment:
 
-      config :nodelix,
-        version: "20.10.0",
-        default: [
-          args: ~w(
-            some-script.js
-            --some-option
-          ),
-          cd: Path.expand("../assets", __DIR__),
-        ]
+```elixir
+config :nodelix,
+  version: "20.10.0",
+  default: [
+    args: ~w(
+      some-script.js
+      --some-option
+    ),
+    cd: Path.expand("../assets", __DIR__)
+  ],
+  custom: [
+    args: ~w(
+      another-script.js
+      --another-option
+    ),
+    cd: Path.expand("../assets/scripts", __DIR__),
+    env: [
+      NODE_DEBUG: "*"
+    ]
+  ]
+```
 
 The default current directory is your project's root.
 
-When `mix nodelix default` is invoked, the task arguments will be appended
-to the ones configured above.
+To use a profile other than `default`, you can use the `--profile` option:
+
+```shell
+mix nodelix --profile custom
+```
+
+When `mix nodelix` is invoked, the task arguments will
+be appended to the ones configured in the profile.
 
 ## Versioning
 
