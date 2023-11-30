@@ -24,7 +24,7 @@ The package can be installed by adding `nodelix` to your list of dependencies in
 ```elixir
 def deps do
   [
-    {:nodelix, "1.0.0-alpha.7", only: :dev, runtime: false}
+    {:nodelix, "1.0.0-alpha.8", only: :dev, runtime: false}
   ]
 end
 ```

@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.0.0-alpha.8](https://github.com/sheerlox/nodelix/compare/v1.0.0-alpha.7...v1.0.0-alpha.8) (2023-11-30)
+
+
+### ⚠ Breaking changes
+
+* `--if-missing` is now the default, use `--force` to reinstall an existing version
+
+### ✨ Features
+
+* don't reinstall by default & add force install flag ([0bb58d0](https://github.com/sheerlox/nodelix/commit/0bb58d06b77db15a2b3da66bf6cd4de18f5cded2))
+
 ## [1.0.0-alpha.7](https://github.com/sheerlox/nodelix/compare/v1.0.0-alpha.6...v1.0.0-alpha.7) (2023-11-29)
 
 
