@@ -38,6 +38,7 @@ defmodule Mix.Tasks.Nodelix do
   @dialyzer {:no_missing_calls, run: 1}
 
   @impl Mix.Task
+  @spec run([String.t()]) :: :ok
   def run(args) do
     switches = [profile: :string, runtime_config: :boolean]
 

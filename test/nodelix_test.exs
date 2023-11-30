@@ -15,31 +15,35 @@ defmodule NodelixTest do
 
   test "run without profile" do
     assert ExUnit.CaptureIO.capture_io(fn ->
-             assert Mix.Task.run("nodelix", ["--version"]) == :ok
+             assert Mix.Task.rerun("nodelix", ["--version"]) == :ok
            end) =~ @version
   end
 
   test "run on another profile" do
     assert ExUnit.CaptureIO.capture_io(fn ->
-             assert Mix.Task.run("nodelix", ["--profile", "another", "--version"]) == :ok
+             assert Mix.Task.rerun("nodelix", ["--profile", "test_profile"]) == :ok
            end) =~ @version
   end
 
-  test "updates on install" do
-    Application.put_env(:nodelix, :version, "20.9.0")
-    Mix.Task.rerun("nodelix.install", ["--if-missing"])
+  test "installs and runs multiple versions" do
+    Application.put_env(:nodelix, :version, "18.18.2")
+    Mix.Task.rerun("nodelix.install")
 
     assert ExUnit.CaptureIO.capture_io(fn ->
-             assert Mix.Task.run("nodelix", ["--version"]) == :ok
-           end) =~ "20.9.0"
+             assert Mix.Task.rerun("nodelix", ["--version"]) == :ok
+           end) =~ "18.18.2"
 
-    Application.delete_env(:nodelix, :version)
-
-    Mix.Task.rerun("nodelix.install", ["--if-missing"])
+    Application.put_env(:nodelix, :version, @version)
 
     assert ExUnit.CaptureIO.capture_io(fn ->
-             assert Mix.Task.run("nodelix", ["--version"]) == :ok
+             assert Mix.Task.rerun("nodelix", ["--version"]) == :ok
            end) =~ @version
+  end
+
+  test "re-installs with force flag" do
+    assert ExUnit.CaptureLog.capture_log(fn ->
+             assert Mix.Task.rerun("nodelix.install", ["--force"]) == :ok
+           end) =~ "Succesfully installed Node.js v#{@version}"
   end
 
   test "installs with custom URL" do

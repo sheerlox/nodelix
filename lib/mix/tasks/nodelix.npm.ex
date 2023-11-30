@@ -25,9 +25,9 @@ defmodule Mix.Tasks.Nodelix.Npm do
   alias Nodelix.VersionManager
 
   @shortdoc "Invokes npm with the provided arguments"
-  @dialyzer {:no_missing_calls, run: 1}
 
   @impl Mix.Task
+  @spec run([String.t()]) :: :ok
   def run(args) do
     npm_path = VersionManager.bin_path(:npm, Nodelix.configured_version())
 

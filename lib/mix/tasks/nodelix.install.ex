@@ -12,7 +12,7 @@ defmodule Mix.Tasks.Nodelix.Install do
   > API _should not_ be considered stable, and using a pinned version is _recommended_.
 
       $ mix nodelix.install
-      $ mix nodelix.install --if-missing
+      $ mix nodelix.install --force
 
   By default, it installs #{VersionManager.latest_lts_version()} but you
   can configure it in your config files, such as:
@@ -24,8 +24,7 @@ defmodule Mix.Tasks.Nodelix.Install do
     - `--runtime-config` - load the runtime configuration
       before executing command
 
-    - `--if-missing` - install only if the given version
-      does not exist
+    - `--force` - install even if the given version is already present
   """
 
   @shortdoc "Installs Node.js"
@@ -33,8 +32,9 @@ defmodule Mix.Tasks.Nodelix.Install do
   @dialyzer {:no_missing_calls, run: 1}
 
   @impl Mix.Task
+  @spec run([String.t()]) :: :ok
   def run(args) do
-    valid_options = [runtime_config: :boolean, if_missing: :boolean, assets: :boolean]
+    valid_options = [runtime_config: :boolean, force: :boolean, assets: :boolean]
 
     {opts, archive_base_url} =
       case OptionParser.parse_head!(args, strict: valid_options) do
@@ -51,7 +51,7 @@ defmodule Mix.Tasks.Nodelix.Install do
               mix nodelix.install
               mix nodelix.install 'https://nodejs.org/dist/v$version/node-v$version-$target.$ext'
               mix nodelix.install --runtime-config
-              mix nodelix.install --if-missing
+              mix nodelix.install --force
           """)
       end
 
@@ -59,7 +59,7 @@ defmodule Mix.Tasks.Nodelix.Install do
 
     configured_version = Nodelix.configured_version()
 
-    if opts[:if_missing] && VersionManager.is_installed?(configured_version) do
+    if VersionManager.is_installed?(configured_version) and !opts[:force] do
       :ok
     else
       if function_exported?(Mix, :ensure_application!, 1) do
