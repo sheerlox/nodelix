@@ -8,11 +8,6 @@ defmodule NodelixTest do
     Mix.Task.run("nodelix.install")
   end
 
-  setup do
-    Application.put_env(:nodelix, :version, @version)
-    :ok
-  end
-
   test "run without profile" do
     assert ExUnit.CaptureIO.capture_io(fn ->
              assert Mix.Task.rerun("nodelix", ["--version"]) == :ok
@@ -26,14 +21,9 @@ defmodule NodelixTest do
   end
 
   test "installs and runs multiple versions" do
-    Application.put_env(:nodelix, :version, "18.18.2")
-    Mix.Task.rerun("nodelix.install")
-
     assert ExUnit.CaptureIO.capture_io(fn ->
-             assert Mix.Task.rerun("nodelix", ["--version"]) == :ok
+             assert Mix.Task.rerun("nodelix", ["--version", "18.18.2", "--version"]) == :ok
            end) =~ "18.18.2"
-
-    Application.put_env(:nodelix, :version, @version)
 
     assert ExUnit.CaptureIO.capture_io(fn ->
              assert Mix.Task.rerun("nodelix", ["--version"]) == :ok

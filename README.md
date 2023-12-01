@@ -29,32 +29,27 @@ def deps do
 end
 ```
 
-Once installed, change your `config/config.exs` to pick your
-Node.js version of choice:
-
-```elixir
-config :nodelix, version: "20.10.0"
-```
-
 Now you can install Node.js by running:
 
 ```shell
-$ mix nodelix.install
+$ mix nodelix.install --version 18.18.2
 ```
 
 And invoke Node.js with:
 
 ```shell
-$ mix nodelix some-script.js --some-option
+$ mix nodelix --version 18.18.2 some-script.js --some-option
 ```
+
+If you omit the `--version` flag, the latest known
+[LTS version](https://nodejs.org/en/about/previous-releases) at the
+time of publishing will used.
 
 The Node.js installation is located at `_build/dev/nodejs/versions/$VERSION`.
 
 ## Nodelix configuration
 
-There are two global configurations for the nodelix application:
-
-- `:version` - the Node.js version to use
+There is one global configuration for the nodelix application:
 
 - `:cacerts_path` - the directory to find certificates for
   https connections
@@ -66,13 +61,12 @@ which you can configure its args, current directory and environment:
 
 ```elixir
 config :nodelix,
-  version: "20.10.0",
   default: [
     args: ~w(
       some-script.js
       --some-option
     ),
-    cd: Path.expand("../assets", __DIR__)
+    cd: Path.expand("../assets", __DIR__),
   ],
   custom: [
     args: ~w(

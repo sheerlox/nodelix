@@ -14,9 +14,7 @@ defmodule Nodelix do
 
   ## Nodelix configuration
 
-  There are two global configurations for the nodelix application:
-
-  - `:version` - the Node.js version to use
+  There is one global configuration for the nodelix application:
 
   - `:cacerts_path` - the directory to find certificates for
       https connections
@@ -28,21 +26,23 @@ defmodule Nodelix do
 
   ```elixir
   config :nodelix,
-  version: "#{VersionManager.latest_lts_version()}",
-  default: [
-    args: ~w(
-      some-script.js
-      --some-option
-    ),
-    cd: Path.expand("../assets", __DIR__),
-  ],
-  custom: [
-    args: ~w(
-      another-script.js
-      --another-option
-    ),
-    cd: Path.expand("../assets/scripts", __DIR__),
-  ]
+    default: [
+      args: ~w(
+        some-script.js
+        --some-option
+      ),
+      cd: Path.expand("../assets", __DIR__),
+    ],
+    custom: [
+      args: ~w(
+        another-script.js
+        --another-option
+      ),
+      cd: Path.expand("../assets/scripts", __DIR__),
+      env: [
+        NODE_DEBUG: "*"
+      ]
+    ]
   ```
 
   The default current directory is your project's root.
@@ -61,26 +61,7 @@ defmodule Nodelix do
 
   @doc false
   def start(_, _) do
-    unless Application.get_env(:nodelix, :version) do
-      latest_lts_version = VersionManager.latest_lts_version()
-
-      Logger.warning("""
-      Node.js version is not configured. Please set it in your config files:
-
-          config :nodelix, :version, "#{latest_lts_version}"
-
-      Using latest known LTS version at the time of release: #{latest_lts_version}
-      """)
-    end
-
     Supervisor.start_link([], strategy: :one_for_one)
-  end
-
-  @doc """
-  Returns the configured Node.js version.
-  """
-  def configured_version do
-    Application.get_env(:nodelix, :version, VersionManager.latest_lts_version())
   end
 
   @doc """
@@ -94,7 +75,6 @@ defmodule Nodelix do
       Unknown nodelix profile. Make sure the profile is defined in your config/config.exs file, such as:
 
           config :nodelix,
-            version: "#{VersionManager.latest_lts_version()}",
             #{profile}: [
               args: ~w(
                 some-script.js
@@ -112,7 +92,7 @@ defmodule Nodelix do
   The task output will be streamed directly to stdio. It
   returns the status of the underlying call.
   """
-  def run(profile, extra_args \\ []) when is_atom(profile) and is_list(extra_args) do
+  def run(version, profile, extra_args \\ []) when is_atom(profile) and is_list(extra_args) do
     config = config_for!(profile)
     args = (config[:args] || []) ++ extra_args
 
@@ -127,7 +107,7 @@ defmodule Nodelix do
       stderr_to_stdout: true
     ]
 
-    VersionManager.bin_path(:node, Nodelix.configured_version())
+    VersionManager.bin_path(:node, version)
     |> System.cmd(args, opts)
     |> elem(1)
   end
@@ -136,15 +116,13 @@ defmodule Nodelix do
   Installs Node.js if the configured version is not available,
   and then runs `node`.
 
-  Returns the same as `run/2`.
+  Returns the same as `run/3`.
   """
-  def install_and_run(profile, args) do
-    version = configured_version()
-
+  def install_and_run(version, profile, args) do
     unless VersionManager.is_installed?(version) do
       VersionManager.install(version)
     end
 
-    run(profile, args)
+    run(version, profile, args)
   end
 end

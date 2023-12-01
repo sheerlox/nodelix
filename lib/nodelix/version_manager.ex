@@ -69,7 +69,7 @@ defmodule Nodelix.VersionManager do
     unpack_archive(version)
 
     Logger.debug(
-      "Succesfully installed Node.js v#{Nodelix.configured_version()} in #{Map.get(paths(version), :destination)}"
+      "Succesfully installed Node.js v#{version} in #{Map.get(paths(version), :destination)}"
     )
 
     :ok
@@ -196,7 +196,7 @@ defmodule Nodelix.VersionManager do
   end
 
   defp fetch_archive(version, archive_base_url) do
-    archive_url = get_url(archive_base_url)
+    archive_url = get_url(archive_base_url, version)
     %{archive: archive_path} = paths(version)
 
     Logger.debug("Downloading Node.js from #{archive_url}")
@@ -205,7 +205,7 @@ defmodule Nodelix.VersionManager do
   end
 
   defp fetch_checksums(version) do
-    checksums_url = get_url(@signed_checksums_base_url)
+    checksums_url = get_url(@signed_checksums_base_url, version)
 
     %{checksums: checksums_path} = paths(version)
 
@@ -268,9 +268,9 @@ defmodule Nodelix.VersionManager do
     end
   end
 
-  defp get_url(base_url) do
+  defp get_url(base_url, version) do
     base_url
-    |> String.replace("$version", Nodelix.configured_version())
+    |> String.replace("$version", version)
     |> String.replace("$target", target())
     |> String.replace("$ext", extension())
   end

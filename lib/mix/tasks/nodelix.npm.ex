@@ -1,6 +1,8 @@
 defmodule Mix.Tasks.Nodelix.Npm do
   use Mix.Task
 
+  alias Nodelix.VersionManager
+
   @moduledoc """
   Invokes `npm` with the provided arguments.
 
@@ -15,22 +17,37 @@ defmodule Mix.Tasks.Nodelix.Npm do
 
   Example:
 
-      $ mix nodelix.npm install --save-dev semantic-release semantic-release-hex
+      $ mix nodelix.npm install --save-dev tailwindcss esbuild
 
   Refer to `Mix.Tasks.Nodelix` for task options and to `Nodelix` for more information
   on configuration and profiles.
 
-  """
+  ## Options
 
-  alias Nodelix.VersionManager
+    - `--version` - Node.js version to use, defaults to latest known
+    LTS version (`#{VersionManager.latest_lts_version()}`)
+
+  Flags to control this Mix task must be given before the
+  node arguments:
+
+      $ mix nodelix.npm --version 18.18.2 install --save-dev tailwindcss esbuild
+
+  """
 
   @shortdoc "Invokes npm with the provided arguments"
 
   @impl Mix.Task
   @spec run([String.t()]) :: :ok
   def run(args) do
-    npm_path = VersionManager.bin_path(:npm, Nodelix.configured_version())
+    switches = [version: :string]
 
-    Mix.Task.run("nodelix", [npm_path | args])
+    {opts, remaining_args, invalid_opts} = OptionParser.parse_head(args, strict: switches)
+    npm_args = Enum.map(invalid_opts, &elem(&1, 0)) ++ remaining_args
+
+    version = opts[:version] || VersionManager.latest_lts_version()
+
+    npm_path = VersionManager.bin_path(:npm, version)
+
+    Mix.Tasks.Nodelix.run(["--version", version] ++ [npm_path | npm_args])
   end
 end

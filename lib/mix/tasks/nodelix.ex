@@ -1,6 +1,8 @@
 defmodule Mix.Tasks.Nodelix do
   use Mix.Task
 
+  alias Nodelix.VersionManager
+
   @moduledoc """
   Invokes `node` with the provided arguments.
 
@@ -21,7 +23,10 @@ defmodule Mix.Tasks.Nodelix do
 
   ## Options
 
-    - `--profile` - name of the profile to use
+    - `--version` - Node.js version to use, defaults to latest known
+    LTS version (`#{VersionManager.latest_lts_version()}`)
+
+    - `--profile` - name of the profile to use, defaults to `default`
 
     - `--runtime-config` - load the runtime configuration
       before executing command
@@ -29,7 +34,7 @@ defmodule Mix.Tasks.Nodelix do
   Flags to control this Mix task must be given before the
   node arguments:
 
-      $ mix nodelix --profile default --runtime-config some-script.js --some-option
+      $ mix nodelix --version 18.18.2 --profile default --runtime-config some-script.js --some-option
 
   """
 
@@ -40,7 +45,7 @@ defmodule Mix.Tasks.Nodelix do
   @impl Mix.Task
   @spec run([String.t()]) :: :ok
   def run(args) do
-    switches = [profile: :string, runtime_config: :boolean]
+    switches = [version: :string, profile: :string, runtime_config: :boolean]
 
     {opts, remaining_args, invalid_opts} = OptionParser.parse_head(args, strict: switches)
     node_args = Enum.map(invalid_opts, &elem(&1, 0)) ++ remaining_args
@@ -50,6 +55,10 @@ defmodule Mix.Tasks.Nodelix do
       Mix.ensure_application!(:ssl)
     end
 
+    version = opts[:version] || VersionManager.latest_lts_version()
+
+    profile = opts[:profile] || "default"
+
     if opts[:runtime_config] do
       Mix.Task.run("app.config")
     else
@@ -57,16 +66,19 @@ defmodule Mix.Tasks.Nodelix do
       Application.ensure_all_started(:nodelix)
     end
 
-    profile = opts[:profile] || "default"
-
     Mix.Task.reenable("nodelix")
-    install_and_run([profile | node_args])
+    install_and_run(version, profile, node_args)
   end
 
-  defp install_and_run([profile | args] = all) do
-    case Nodelix.install_and_run(String.to_atom(profile), args) do
-      0 -> :ok
-      status -> Mix.raise("`mix nodelix #{Enum.join(all, " ")}` exited with #{status}")
+  defp install_and_run(version, profile, args) do
+    case Nodelix.install_and_run(version, String.to_atom(profile), args) do
+      0 ->
+        :ok
+
+      status ->
+        Mix.raise(
+          "`mix nodelix --version #{version} --profile #{profile} #{Enum.join(args, " ")}` exited with #{status}"
+        )
     end
   end
 end

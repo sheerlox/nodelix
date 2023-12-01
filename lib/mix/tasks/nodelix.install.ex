@@ -12,19 +12,19 @@ defmodule Mix.Tasks.Nodelix.Install do
   > API _should not_ be considered stable, and using a pinned version is _recommended_.
 
       $ mix nodelix.install
+      $ mix nodelix.install --version 18.18.2
       $ mix nodelix.install --force
 
-  By default, it installs #{VersionManager.latest_lts_version()} but you
-  can configure it in your config files, such as:
-
-      config :nodelix, :version, "#{VersionManager.latest_lts_version()}"
-
   ## Options
+
+    - `--version` - name of the profile to use, defaults to latest known
+    LTS version (`#{VersionManager.latest_lts_version()}`)
+
+    - `--force` - install even if the given version is already present
 
     - `--runtime-config` - load the runtime configuration
       before executing command
 
-    - `--force` - install even if the given version is already present
   """
 
   @shortdoc "Installs Node.js"
@@ -34,7 +34,7 @@ defmodule Mix.Tasks.Nodelix.Install do
   @impl Mix.Task
   @spec run([String.t()]) :: :ok
   def run(args) do
-    valid_options = [runtime_config: :boolean, force: :boolean, assets: :boolean]
+    valid_options = [version: :string, force: :boolean, runtime_config: :boolean]
 
     {opts, archive_base_url} =
       case OptionParser.parse_head!(args, strict: valid_options) do
@@ -50,16 +50,17 @@ defmodule Mix.Tasks.Nodelix.Install do
 
               mix nodelix.install
               mix nodelix.install 'https://nodejs.org/dist/v$version/node-v$version-$target.$ext'
-              mix nodelix.install --runtime-config
+              mix nodelix.install --version 18.18.2
               mix nodelix.install --force
+              mix nodelix.install --runtime-config
           """)
       end
 
+    version = opts[:version] || VersionManager.latest_lts_version()
+
     if opts[:runtime_config], do: Mix.Task.run("app.config")
 
-    configured_version = Nodelix.configured_version()
-
-    if VersionManager.is_installed?(configured_version) and !opts[:force] do
+    if VersionManager.is_installed?(version) and !opts[:force] do
       :ok
     else
       if function_exported?(Mix, :ensure_application!, 1) do
@@ -68,7 +69,7 @@ defmodule Mix.Tasks.Nodelix.Install do
       end
 
       Mix.Task.run("loadpaths")
-      VersionManager.install(configured_version, archive_base_url)
+      VersionManager.install(version, archive_base_url)
     end
   end
 end
