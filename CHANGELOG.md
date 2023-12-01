@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.0.0-alpha.9](https://github.com/sheerlox/nodelix/compare/v1.0.0-alpha.8...v1.0.0-alpha.9) (2023-12-01)
+
+
+### ⚠ Breaking changes
+
+* `version` is now an argument / mix flag instead of a global configuration
+
+### ✨ Features
+
+* remove version from application configuration ([06c539f](https://github.com/sheerlox/nodelix/commit/06c539f7cdcafe1efedaf626a76c9ccd3dd1b603))
+
 ## [1.0.0-alpha.8](https://github.com/sheerlox/nodelix/compare/v1.0.0-alpha.7...v1.0.0-alpha.8) (2023-11-30)
 
 
