@@ -1,5 +1,10 @@
 # Nodelix
 
+[![Hex.pm Version](https://img.shields.io/hexpm/v/nodelix.svg)](https://hex.pm/packages/nodelix)
+[![Hex.pm Docs](https://img.shields.io/badge/hex-docs-lightgreen.svg)](https://hexdocs.pm/nodelix/)
+[![Hex.pm Downloads](https://img.shields.io/hexpm/dw/nodelix.svg)](https://hex.pm/packages/nodelix)
+[![Last Commit](https://img.shields.io/github/last-commit/sheerlox/nodelix.svg)](https://github.com/sheerlox/nodelix/)
+
 Seamless Node.js in Elixir.
 
 > **⚠️ WARNING**
@@ -12,8 +17,6 @@ Provides Mix tasks for the installation and execution of Node.js.
 
 This project is currently not recommended for production Elixir use.
 Its main purpose is to offer a straightforward interface for utilizing Node.js and npm libraries within Mix tasks.
-
-Full documentation can be found at [https://hexdocs.pm/nodelix](https://hexdocs.pm/nodelix).
 
 ## Installation
 
