@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.0.0-alpha.10](https://github.com/sheerlox/nodelix/compare/v1.0.0-alpha.9...v1.0.0-alpha.10) (2024-05-02)
+
+
+### 🐛 Bug Fixes
+
+* update latest Node LTS version to 20.12.2 ([#2](https://github.com/sheerlox/nodelix/issues/2)) ([9eb27a0](https://github.com/sheerlox/nodelix/commit/9eb27a04f81483659af692c4f811b400698031e1))
+
+
+### ♻️ Chores
+
+* **readme:** add Hex.pm badges ([1a74df1](https://github.com/sheerlox/nodelix/commit/1a74df1018f6e68bebb729003fe0f76128e6f5eb))
+
 ## [1.0.0-alpha.9](https://github.com/sheerlox/nodelix/compare/v1.0.0-alpha.8...v1.0.0-alpha.9) (2023-12-01)
 
 
