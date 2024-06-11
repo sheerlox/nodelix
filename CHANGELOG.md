@@ -7,6 +7,19 @@
 
 * ignore revoked PGP key import errors ([35e6674](https://github.com/sheerlox/nodelix/commit/35e66749d772a3a23503b5def1baeaf2d3b16ca1))
 
+
+### ♻️ Chores
+
+* configure renovate ([7db3c3c](https://github.com/sheerlox/nodelix/commit/7db3c3c2f22aa266d59de75c0984faff5c4514c8))
+* **release:** v1.0.0-alpha.11 [skip ci] ([0b2bf62](https://github.com/sheerlox/nodelix/commit/0b2bf62045c4d7e1da7824f8ea0c3f67a59cab47))
+
+## [1.0.0-alpha.11](https://github.com/sheerlox/nodelix/compare/v1.0.0-alpha.10...v1.0.0-alpha.11) (2024-06-11)
+
+
+### 🐛 Bug Fixes
+
+* ignore revoked PGP key import errors ([35e6674](https://github.com/sheerlox/nodelix/commit/35e66749d772a3a23503b5def1baeaf2d3b16ca1))
+
 ## [1.0.0-alpha.10](https://github.com/sheerlox/nodelix/compare/v1.0.0-alpha.9...v1.0.0-alpha.10) (2024-05-02)
 
 
