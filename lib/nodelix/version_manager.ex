@@ -145,8 +145,9 @@ defmodule Nodelix.VersionManager do
       Logger.debug("Using GPG to retrieve #{length(missing_keys)} missing signing keys")
 
       {messages, _} =
-        GPGex.cmd!(["--keyserver", "hkps://keys.openpgp.org", "--recv-keys"] ++ missing_keys,
-          keystore: keystore
+        receive_pgp_keys_ignore_revoked!(missing_keys,
+          keystore: keystore,
+          keyserver: "hkps://keyserver.ubuntu.com"
         )
 
       imported_keys =
@@ -163,12 +164,8 @@ defmodule Nodelix.VersionManager do
 
       still_missing_keys = missing_keys -- imported_keys
 
-      # because some keys are unverified on keys.openpgp.org,
-      # we make a subsequent call to the Ubuntu keyserver
-      GPGex.cmd!(
-        ["--keyserver", "hkps://keyserver.ubuntu.com", "--recv-keys"] ++ still_missing_keys,
-        keystore: keystore
-      )
+      if length(still_missing_keys) > 0,
+        do: Logger.debug("Couldn't import following keys: #{Enum.join(still_missing_keys, ", ")}")
     end
 
     GPGex.cmd!(["--verify", checksums_path], keystore: keystore)
@@ -273,5 +270,27 @@ defmodule Nodelix.VersionManager do
     |> String.replace("$version", version)
     |> String.replace("$target", target())
     |> String.replace("$ext", extension())
+  end
+
+  defp receive_pgp_keys_ignore_revoked!(key_ids, opts) do
+    keystore = Keyword.get(opts, :keystore)
+    keyserver = Keyword.get(opts, :keyserver)
+
+    keyserver_opts = if keyserver, do: ["--keyserver", keyserver], else: []
+
+    case GPGex.cmd(keyserver_opts ++ ["--recv-keys"] ++ key_ids, keystore: keystore) do
+      {:ok, res} ->
+        res
+
+      {:error, {_, [first_message | _] = stdout, args}} ->
+        case first_message =~ "can't apply revocation certificate" do
+          true ->
+            {[], []}
+
+          false ->
+            raise RuntimeError,
+                  "GPG command 'gpg #{Enum.join(args, " ")}' failed with:\n#{Enum.join(stdout, "\n")}"
+        end
+    end
   end
 end
