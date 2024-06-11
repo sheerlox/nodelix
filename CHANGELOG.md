@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.0-alpha.11](https://github.com/sheerlox/nodelix/compare/v1.0.0-alpha.10...v1.0.0-alpha.11) (2024-06-11)
+
+
+### 🐛 Bug Fixes
+
+* ignore revoked PGP key import errors ([35e6674](https://github.com/sheerlox/nodelix/commit/35e66749d772a3a23503b5def1baeaf2d3b16ca1))
+
 ## [1.0.0-alpha.10](https://github.com/sheerlox/nodelix/compare/v1.0.0-alpha.9...v1.0.0-alpha.10) (2024-05-02)
 
 
