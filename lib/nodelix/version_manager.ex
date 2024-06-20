@@ -142,30 +142,22 @@ defmodule Nodelix.VersionManager do
       |> Enum.filter(fn key_id -> !GPGex.cmd?(["--list-keys", key_id], keystore: keystore) end)
 
     if length(missing_keys) > 0 do
-      Logger.debug("Using GPG to retrieve #{length(missing_keys)} missing signing keys")
+      Logger.debug("Retrieving #{length(missing_keys)} missing signing keys")
 
-      {messages, _} =
-        receive_pgp_keys_ignore_revoked!(missing_keys,
-          keystore: keystore,
-          keyserver: "hkps://keyserver.ubuntu.com"
-        )
+      tasks =
+        Enum.map(missing_keys, fn key_id ->
+          Task.async(fn ->
+            url = "https://github.com/nodejs/release-keys/raw/main/keys/#{key_id}.asc"
+            dest = Path.join(keystore_path, "#{key_id}.asc")
 
-      imported_keys =
-        Enum.flat_map(messages, fn msg ->
-          case String.starts_with?(msg, "IMPORT_OK") do
-            true ->
-              [_, _, key_id] = String.split(msg, " ", parts: 3)
-              [key_id]
-
-            false ->
-              []
-          end
+            binary = HttpUtils.fetch_body!(url)
+            File.write!(dest, binary, [:binary])
+            GPGex.cmd!(["--import", dest], keystore: keystore)
+            File.rm!(dest)
+          end)
         end)
 
-      still_missing_keys = missing_keys -- imported_keys
-
-      if length(still_missing_keys) > 0,
-        do: Logger.debug("Couldn't import following keys: #{Enum.join(still_missing_keys, ", ")}")
+      Task.await_many(tasks, 60000)
     end
 
     GPGex.cmd!(["--verify", checksums_path], keystore: keystore)
@@ -270,27 +262,5 @@ defmodule Nodelix.VersionManager do
     |> String.replace("$version", version)
     |> String.replace("$target", target())
     |> String.replace("$ext", extension())
-  end
-
-  defp receive_pgp_keys_ignore_revoked!(key_ids, opts) do
-    keystore = Keyword.get(opts, :keystore)
-    keyserver = Keyword.get(opts, :keyserver)
-
-    keyserver_opts = if keyserver, do: ["--keyserver", keyserver], else: []
-
-    case GPGex.cmd(keyserver_opts ++ ["--recv-keys"] ++ key_ids, keystore: keystore) do
-      {:ok, res} ->
-        res
-
-      {:error, {_, [first_message | _] = stdout, args}} ->
-        case first_message =~ "can't apply revocation certificate" do
-          true ->
-            {[], []}
-
-          false ->
-            raise RuntimeError,
-                  "GPG command 'gpg #{Enum.join(args, " ")}' failed with:\n#{Enum.join(stdout, "\n")}"
-        end
-    end
   end
 end
