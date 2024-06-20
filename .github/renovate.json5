@@ -1,6 +1,6 @@
 {
   $schema: "https://docs.renovatebot.com/renovate-schema.json",
-  extends: ["github>talent-ideal/.github//renovate/elixir/elixir-lib"],
+  extends: ["github>insurgent-lab/.github//renovate/elixir/elixir-lib"],
   packageRules: [
     // disable Elixir and Erlang updates via asdf because we want to support older versions
     {
