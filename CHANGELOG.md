@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.0.0-alpha.12](https://github.com/sheerlox/nodelix/compare/v1.0.0-alpha.11...v1.0.0-alpha.12) (2024-06-20)
+
+
+### 🐛 Bug Fixes
+
+* receive signing keys from nodejs/release-keys repo ([cb9de75](https://github.com/sheerlox/nodelix/commit/cb9de75ff0085a464d8745660a6cac6affcf54a1))
+* update latest Node LTS version to 20.14.0 ([6ed4f24](https://github.com/sheerlox/nodelix/commit/6ed4f24342258af91d282449236589f87376441e))
+
+
+### ♻️ Chores
+
+* fix renovate config ([514b9cb](https://github.com/sheerlox/nodelix/commit/514b9cb7e6dc93263cd48855863a67b9c41e8e72))
+
 ## [1.0.0-alpha.11](https://github.com/sheerlox/nodelix/compare/v1.0.0-alpha.10...v1.0.0-alpha.11) (2024-06-11)
 
 
