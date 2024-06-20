@@ -1,6 +1,6 @@
 defmodule Nodelix.VersionManager do
   # https://nodejs.org/en/about/previous-releases
-  @latest_lts_version "20.12.2"
+  @latest_lts_version "20.14.0"
 
   @default_archive_base_url "https://nodejs.org/dist/v$version/node-v$version-$target.$ext"
   @signed_checksums_base_url "https://nodejs.org/dist/v$version/SHASUMS256.txt.asc"
