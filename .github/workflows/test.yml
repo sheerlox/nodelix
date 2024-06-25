@@ -66,7 +66,7 @@ jobs:
           elixir-version: ${{matrix.elixir}}
 
       - name: Restore dependencies cache
-        uses: actions/cache@704facf57e6136b1bc63b828d79edcd491f0ee84 # v3.3.2
+        uses: actions/cache@e12d46a63a90f2fae62d114769bbf2a179198b5c # v3.3.3
         env:
           cache-key: deps
         with:
@@ -96,7 +96,7 @@ jobs:
 
       - name: Restore PLTs cache
         id: restore_plts_cache
-        uses: actions/cache/restore@704facf57e6136b1bc63b828d79edcd491f0ee84 # v3.3.2
+        uses: actions/cache/restore@e12d46a63a90f2fae62d114769bbf2a179198b5c # v3.3.3
         env:
           cache-key: plts
         with:
@@ -113,7 +113,7 @@ jobs:
           mix dialyzer --plt
 
       - name: Save PLTs cache
-        uses: actions/cache/save@704facf57e6136b1bc63b828d79edcd491f0ee84 # v3.3.2
+        uses: actions/cache/save@e12d46a63a90f2fae62d114769bbf2a179198b5c # v3.3.3
         env:
           cache-key: plts
         if: steps.restore_plts_cache.outputs.cache-hit != 'true'
