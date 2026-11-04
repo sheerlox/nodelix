@@ -38,6 +38,18 @@ jobs:
           - elixir: 1.16.x
             otp: 26
             os: ubuntu-24.04
+          - elixir: 1.17.x
+            otp: 27
+            os: ubuntu-24.04
+          - elixir: 1.18.x
+            otp: 27
+            os: ubuntu-24.04
+          - elixir: 1.19.x
+            otp: 28
+            os: ubuntu-24.04
+          - elixir: 1.20.x
+            otp: 29
+            os: ubuntu-24.04
 
     env:
       MIX_ENV: test
