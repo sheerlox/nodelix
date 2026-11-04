@@ -1,5 +1,5 @@
 defmodule NodelixTest do
-  use ExUnit.Case, async: true
+  use ExUnit.Case, async: false
 
   @latest_lts_version Nodelix.VersionManager.latest_lts_version()
 
