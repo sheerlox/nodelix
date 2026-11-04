@@ -1,5 +1,49 @@
 # Changelog
 
+## [1.0.0-alpha.16](https://github.com/sheerlox/nodelix/compare/v1.0.0-alpha.15...v1.0.0-alpha.16) (2026-11-04)
+
+
+### ⚠ Breaking changes
+
+* the minimum supported Elixir version is now 1.16.
+
+Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>
+
+### 🐛 Bug Fixes
+
+* remove unused Logger require ([9522e66](https://github.com/sheerlox/nodelix/commit/9522e66a8441e3d410f164d0b38b792625082091))
+* update latest Node LTS version to 26.13.0 ([99d5ad4](https://github.com/sheerlox/nodelix/commit/99d5ad4c069cf934cabb508375c398d18793527b))
+
+
+### 🚨 Tests
+
+* run Nodelix tests synchronously ([993289a](https://github.com/sheerlox/nodelix/commit/993289a6698c2829bfa6c5cf468dda873c654710))
+
+
+### ⚙️ Continuous Integrations
+
+* pin runner image and drop Elixir < 1.16 ([7e0d3cf](https://github.com/sheerlox/nodelix/commit/7e0d3cfdbc4766fb1a3c81266cb9cb945e71310d))
+* **renovate:** extend required base config ([9b0ea86](https://github.com/sheerlox/nodelix/commit/9b0ea86562a2677aa3973eddd5804efb9b998159))
+* test against Elixir 1.17-1.20 and pin release runner to ubuntu-24.04 ([79f7db5](https://github.com/sheerlox/nodelix/commit/79f7db53474b6530ca79412bffa43451b08ed1d0))
+* update Erlang/Elixir used by release to OTP 29.1.2 / 1.20.5 ([6ba218d](https://github.com/sheerlox/nodelix/commit/6ba218d548bc308c2822c48df04576eed74e6a1e))
+
+
+### ♻️ Chores
+
+* **action:** update actions/cache action to v4.2.1 ([2fef404](https://github.com/sheerlox/nodelix/commit/2fef40434053b100a7aeffd4e27c38f3771de38f))
+* **action:** update actions/cache action to v4.2.2 ([#39](https://github.com/sheerlox/nodelix/issues/39)) ([8ce0b53](https://github.com/sheerlox/nodelix/commit/8ce0b53dd10887821647b15638c0d70ac3444d91))
+* **action:** update actions/cache action to v4.2.3 ([5cbde34](https://github.com/sheerlox/nodelix/commit/5cbde340391b028cded2bcbe4867973eb3408bae))
+* **action:** update actions/setup-node action to v4.2.0 ([8bfba96](https://github.com/sheerlox/nodelix/commit/8bfba960a16038df647d717bcd5fdccbbb953040))
+* **action:** update actions/setup-node action to v4.3.0 ([#42](https://github.com/sheerlox/nodelix/issues/42)) ([23a2577](https://github.com/sheerlox/nodelix/commit/23a25772d5958ed37ef74c547a72f5a848403f45))
+* **deps:** lock file maintenance ([7e5d133](https://github.com/sheerlox/nodelix/commit/7e5d1335ca647a8eb3c9e2d51e97ab740e638120))
+* **deps:** update dependency dialyxir to v1.4.5 ([#29](https://github.com/sheerlox/nodelix/issues/29)) ([5f6b695](https://github.com/sheerlox/nodelix/commit/5f6b6957ef48edb9b0afc295e58cb3cb338181b1))
+* **deps:** update dependency elixir to v1.18.1 ([#26](https://github.com/sheerlox/nodelix/issues/26)) ([de80ed7](https://github.com/sheerlox/nodelix/commit/de80ed781ae837ea684c2eb726d7738e4043804a))
+* **deps:** update dependency erlang to v27 ([#27](https://github.com/sheerlox/nodelix/issues/27)) [skip ci] ([b371716](https://github.com/sheerlox/nodelix/commit/b371716b4288e4181ebe21fbfafdb6138e22b6b4))
+* **deps:** update dependency ex_doc to v0.37.0 ([#30](https://github.com/sheerlox/nodelix/issues/30)) ([5c5894c](https://github.com/sheerlox/nodelix/commit/5c5894cce4221331004167f07f6706450bcfa496))
+* **deps:** update dependency ex_doc to v0.37.1 ([9574b5f](https://github.com/sheerlox/nodelix/commit/9574b5f982a3ca05c827451e655fd3c86dbbc90d))
+* **deps:** update dependency ex_doc to v0.37.2 ([94b49d5](https://github.com/sheerlox/nodelix/commit/94b49d56f74681a4b41425a07f821075fceff2cf))
+* **deps:** update dependency ex_doc to v0.37.3 ([#40](https://github.com/sheerlox/nodelix/issues/40)) ([8d9c4a5](https://github.com/sheerlox/nodelix/commit/8d9c4a5c8df659bcc12ee3eac0ae426a23e0bc9a))
+
 ## [1.0.0-alpha.15](https://github.com/sheerlox/nodelix/compare/v1.0.0-alpha.14...v1.0.0-alpha.15) (2025-01-10)
 
 
