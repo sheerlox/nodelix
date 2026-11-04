@@ -1,6 +1,5 @@
 defmodule Nodelix do
   use Application
-  require Logger
 
   alias Nodelix.VersionManager
 
